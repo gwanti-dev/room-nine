@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Room Nine</title>
+<title>Room Nine · Online</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,14 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-mm);overflow:hidd
 #prodNum{font-family:var(--f-ui);font-weight:700;font-size:13px;margin-left:6px;color:var(--ink);}
 #viewBtn{pointer-events:auto;cursor:pointer;padding:6px 12px;font-family:var(--f-ui);font-weight:700;font-size:14px;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:2px;order:3;}
 #viewBtn:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
-#statusBox{padding:8px 12px;max-width:min(420px, 60vw);}
+#statusBox{padding:8px 12px;max-width:min(420px, 60vw);pointer-events:auto;}
+#roomLine{font-family:var(--f-ui);font-size:12px;font-weight:700;color:var(--blue);}
+.invite{margin-top:6px;font-family:var(--f-mm);font-size:13px;font-weight:700;border:1.5px solid var(--ink);border-radius:6px;background:var(--note);padding:3px 10px;cursor:pointer;color:var(--ink);}
+.joinrow{margin-top:16px;padding-top:12px;border-top:2px dashed var(--ink);}
+.joinbar{display:flex;gap:8px;}
+.joinbar input{flex:1;min-width:0;height:50px;font-family:var(--f-ui);font-size:22px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;border:2px solid var(--ink);border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);}
+.joinbar .big{width:110px;margin-top:0;}
+.lobbymsg{min-height:1.5em;font-weight:700;color:var(--blue);}
 #status{font-size:15px;font-weight:700;line-height:1.6;}
 #timer{font-family:var(--f-ui);font-weight:700;font-size:26px;color:var(--red);font-variant-numeric:tabular-nums;}
 #score{font-family:var(--f-ui);font-size:12px;color:var(--soft);}
@@ -67,6 +74,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-mm);overflow:hidd
 @media (max-width:560px){ #prodBox{min-width:0;} #viewBtn{pointer-events:auto;cursor:pointer;padding:6px 12px;font-family:var(--f-ui);font-weight:700;font-size:14px;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:2px;order:3;}
 #viewBtn:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
 #statusBox{max-width:100%;} #status{font-size:13px;} }
+.big{margin-top:2px;}
 
 .overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(30,31,36,.45);
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));}
@@ -98,9 +106,8 @@ select{width:100%;height:44px;font-family:var(--f-ui);font-size:15px;border:2px 
 <div id="stage"></div>
 
 <div id="top">
-  <div class="note" id="prodBox"><div class="lbl">TEAM PRODUCTIVITY<span id="prodNum">70%</span></div><div class="bar"><div id="prod"></div></div></div>
   <button class="note" id="viewBtn" type="button"><span class="lbl">VIEW · V</span><span id="viewName">Overview</span></button>
-  <div class="note" id="statusBox"><div id="status">ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ</div><div id="timer"></div><div id="score"></div></div>
+  <div class="note" id="statusBox"><div id="roomLine"></div><div id="status">ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ</div><div id="timer"></div><div id="score"></div><button class="invite" id="inviteBtn" type="button" hidden>Invite link copy ကူးမယ်</button></div>
 </div>
 <div id="tags"></div>
 <div class="note" id="hint" hidden></div>
@@ -115,19 +122,25 @@ select{width:100%;height:44px;font-family:var(--f-ui);font-size:15px;border:2px 
 
 <div class="overlay" id="intro">
   <div class="card note">
-    <div class="lbl">ROOM NINE · CSMC OFFICE</div>
+    <div class="lbl">ROOM NINE · ONLINE</div>
     <h1>ရုံးခန်း ဆူပူ</h1>
-    <p>ကိုယ့်ရုံးခန်းထဲမှာ အဖွဲ့သား ၉ ယောက် အလုပ်လုပ်နေကြတယ်။ ဘယ်သူ ဘာလုပ်နေလဲ ကြည့်၊ ပျင်းနေတဲ့သူကို စက္ကူလိပ်နဲ့ ခေါင်းခေါက်၊ meeting ခေါ်၊ ဒါမှမဟုတ် တစ်ယောက်ယောက်ရဲ့ laptop ကို လုယူပြီး ပြေး။ ၂ စက္ကန့် ကြိုပြေးခွင့်ရပြီး စုစုပေါင်း ၂၂ စက္ကန့် မမိရင် နိုင်တယ်။</p>
+    <p>Team နဲ့ တူတူ online ဆော့ပါ။ တစ်ယောက်က Room ဖွင့်ပြီး ကျန်တဲ့သူတွေ code နဲ့ ဝင်ပါ။ တစ်ယောက်ချင်း ကိုယ့် character ကိုယ်ထိန်းရမယ်။ Laptop လုခံရရင် ကိုယ်တိုင် လိုက်ဖမ်းရမယ်။</p>
     <div class="rules">
       <kbd>W A S D</kbd><span>လမ်းလျှောက် · Move</span>
       <kbd>E</kbd><span>ဘာလုပ်နေလဲ ကြည့် · Look</span>
       <kbd>F</kbd><span>စက္ကူလိပ်နဲ့ ခေါက် · Bonk</span>
-      <kbd>G</kbd><span>Laptop လုယူပြီး ပြေး · Grab</span>
+      <kbd>G</kbd><span>Laptop လုပြီး ပြေး · ၂၂ စက္ကန့် မမိရင် နိုင်</span>
       <kbd>Q</kbd><span>Meeting ခေါ် · Meeting</span>
+      <kbd>V</kbd><span>View ပြောင်း</span>
     </div>
-    <label class="pick" for="who">ဘယ်သူအနေနဲ့ ဆော့မလဲ</label>
+    <label class="pick" for="who">ကိုယ်က ဘယ်သူလဲ</label>
     <select id="who"></select>
-    <button class="big" id="startBtn" type="button">ရုံးတက်မယ် ▶</button>
+    <button class="big" id="hostBtn" type="button">Room အသစ်ဖွင့်မယ် ▶</button>
+    <div class="joinrow">
+      <label class="pick" for="codeIn">ဒါမှမဟုတ် Room code နဲ့ ဝင်မယ်</label>
+      <div class="joinbar"><input id="codeIn" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD"><button class="big alt" id="joinBtn" type="button">Join</button></div>
+    </div>
+    <p id="lobbyMsg" class="lobbymsg" role="status"></p>
   </div>
 </div>
 
@@ -165,6 +178,7 @@ select{width:100%;height:44px;font-family:var(--f-ui);font-size:15px;border:2px 
   </div>
 </div>
 
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
@@ -409,7 +423,9 @@ function placeLaptopHome(e){ scene.add(e.laptop); e.laptop.position.set(e.lapHom
 const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 10), mat(0xfbfaf5));
 
 // ---------- State ----------
-const S = { started:false, prod:70, mode:"free", chase:null, chaseT:0, meetIdx:0, wins:0, losses:0, bonksTotal:0, swing:0 };
+const S = { started:false, mode:"free", chase:null, meetIdx:0, wins:0, losses:0, bonksTotal:0, myFreeze:0 };
+const byId = {}; ents.forEach(e => { byId[e.p.id] = e; e.online = false; e.m.g.visible = false; e.swing = 0; e.tx = e.x; e.tz = e.z; e.tr = 0; e.walking = false; });
+let myChar = null;
 
 // ---------- Movement ----------
 const R = 0.28;
@@ -425,18 +441,266 @@ function move(e, dx, dz){
   return moved;
 }
 function setSay(e, text, t){ e.bubble = text; e.bubT = t || 2.5; }
+function spawnSpot(e){
+  const sx = e.p.seat[0], sz = e.p.seat[1], fx = Math.sin(e.p.seat[2]), fz = Math.cos(e.p.seat[2]);
+  const tries = [[-fx*0.6,-fz*0.6],[fz*0.7,-fx*0.7],[-fz*0.7,fx*0.7],[-fx*1.0,-fz*1.0],[fz*1.1,-fx*1.1],[-fz*1.1,fx*1.1],[-0.7,0.8],[-0.7,-0.8]];
+  for (const o of tries){ if (!blocked(sx + o[0], sz + o[1])) return { x:sx + o[0], z:sz + o[1] }; }
+  return { x:4, z:6 };
+}
+
+// ---------- Network ----------
+const LOCAL = /[?&]local/.test(location.search);
+const PREFIX = "roomnine9-";
+const ICE = { iceServers:[
+  { urls:"stun:stun.l.google.com:19302" },
+  { urls:"stun:global.stun.twilio.com:3478" },
+  { urls:"turn:openrelay.metered.ca:80", username:"openrelayproject", credential:"openrelayproject" },
+  { urls:"turn:openrelay.metered.ca:443?transport=tcp", username:"openrelayproject", credential:"openrelayproject" }
+] };
+const NET = { peer:null, isHost:false, clients:new Map(), host:null, code:"", roster:{}, lastSnap:{}, meeting:false };
+
+function makeLocalPeer(id){
+  const bc = new BroadcastChannel("rn9-local"); const handlers = {}; const conns = {};
+  function makeConn(cid, remote){
+    const h = {};
+    const c = { peer:remote, open:false, closed:false, _h:h,
+      on(ev, fn){ h[ev] = fn; },
+      send(d){ if (!c.closed) bc.postMessage({ k:"data", to:remote, from:id, cid, d:JSON.parse(JSON.stringify(d)) }); },
+      close(){ if (!c.closed){ c.closed = true; c.open = false; bc.postMessage({ k:"close", to:remote, from:id, cid }); if (h.close) h.close(); } } };
+    return c;
+  }
+  bc.onmessage = ev => {
+    const m = ev.data; if (!m || m.to !== id) return;
+    if (m.k === "open"){ const c = makeConn(m.cid, m.from); conns[m.cid] = c; if (handlers.connection) handlers.connection(c);
+      setTimeout(() => { c.open = true; if (c._h.open) c._h.open(); bc.postMessage({ k:"ack", to:m.from, from:id, cid:m.cid }); }, 0); }
+    else if (m.k === "ack"){ const c = conns[m.cid]; if (c){ c.open = true; if (c._h.open) c._h.open(); } }
+    else if (m.k === "data"){ const c = conns[m.cid]; if (c && c._h.data) c._h.data(m.d); }
+    else if (m.k === "close"){ const c = conns[m.cid]; if (c && !c.closed){ c.closed = true; c.open = false; if (c._h.close) c._h.close(); } }
+  };
+  window.addEventListener("beforeunload", () => Object.values(conns).forEach(c => c.close()));
+  setTimeout(() => { if (handlers.open) handlers.open(id); }, 30);
+  return { id, on(ev, fn){ handlers[ev] = fn; },
+    connect(to){ const cid = id + ">" + to + ":" + Math.random().toString(36).slice(2, 7); const c = makeConn(cid, to); conns[cid] = c; bc.postMessage({ k:"open", to, from:id, cid }); return c; },
+    destroy(){ Object.values(conns).forEach(c => c.close()); setTimeout(() => bc.close(), 50); } };
+}
+function newPeer(id){
+  if (LOCAL) return makeLocalPeer(id || "c-" + Math.random().toString(36).slice(2, 8));
+  return id ? new Peer(id, { config:ICE, debug:0 }) : new Peer({ config:ICE, debug:0 });
+}
+function randCode(){ const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s = ""; for (let i = 0; i < 4; i++) s += A[(Math.random()*A.length)|0]; return s; }
+function lobbyMsg(t){ $("lobbyMsg").textContent = t; }
+function netReady(){ if (LOCAL || typeof Peer !== "undefined") return true; lobbyMsg("Network library မဖွင့်နိုင်ပါ · internet ကို စစ်ပြီး page ကို refresh လုပ်ပါ"); return false; }
+function rosterList(){ return Object.keys(NET.roster); }
+
+function hostRoom(){
+  if (!netReady()) return;
+  const code = randCode(); lobbyMsg("Room ဖွင့်နေတယ်...");
+  const peer = newPeer(PREFIX + code); NET.peer = peer;
+  peer.on("open", () => { NET.isHost = true; NET.code = code; NET.roster = {}; NET.roster[myChar] = "host"; startGame(); applyRoster(rosterList()); });
+  peer.on("error", err => {
+    const type = err && err.type || String(err);
+    if (!S.started && type === "unavailable-id"){ try { peer.destroy(); } catch(e){} hostRoom(); return; }
+    if (!S.started) lobbyMsg("Room ဖွင့်မရပါ (" + type + ") · ခဏနေ ပြန်စမ်းပါ"); else flash("Network error · " + type);
+  });
+  peer.on("connection", conn => {
+    conn.on("data", d => hostRecv(conn, d));
+    conn.on("close", () => hostDrop(conn));
+    conn.on("error", () => hostDrop(conn));
+  });
+}
+function hostRecv(conn, d){
+  if (!d || typeof d !== "object") return;
+  if (d.t === "hello"){
+    const c = String(d.c);
+    if (!byId[c] || NET.roster[c]){ conn.send({ t:"taken" }); return; }
+    NET.roster[c] = conn.peer; conn.char = c; conn.seen = performance.now(); NET.clients.set(conn, c);
+    conn.send({ t:"welcome", roster:rosterList(), meeting:NET.meeting, meetIdx:S.meetIdx,
+      chase:S.chase ? { g:S.chase.g, v:S.chase.v, t:S.chase.t, freeze:S.chase.freeze } : null });
+    broadcast({ t:"roster", roster:rosterList() });
+    applyRoster(rosterList());
+    return;
+  }
+  if (!conn.char) return;
+  conn.seen = performance.now();
+  if (d.t === "st"){ if (Array.isArray(d.s)) NET.lastSnap[conn.char] = d.s; return; }
+  if (d.t === "ev" && d.e && d.e.by === conn.char){ if (acceptEvent(d.e)) broadcast({ t:"ev", e:d.e }); }
+}
+function hostDrop(conn){
+  const c = NET.clients.get(conn); if (!c) return;
+  NET.clients.delete(conn); delete NET.roster[c]; delete NET.lastSnap[c];
+  if (S.chase && (S.chase.g === c || S.chase.v === c)){
+    const e = { type:"end", by:c, g:S.chase.g, v:S.chase.v, caught:false, gone:c };
+    applyEvent(e); broadcast({ t:"ev", e });
+  }
+  broadcast({ t:"roster", roster:rosterList() }); applyRoster(rosterList());
+}
+function broadcast(msg){ NET.clients.forEach((c, conn) => { if (conn.open) { try { conn.send(msg); } catch(err){} } }); }
+
+function joinRoom(raw){
+  if (!netReady()) return;
+  const code = String(raw || "").trim().toUpperCase();
+  if (!/^[A-Z0-9]{4}$/.test(code)) return lobbyMsg("Room code ၄ လုံး ထည့်ပါ");
+  lobbyMsg("Room " + code + " ကို ချိတ်ဆက်နေတယ်...");
+  const peer = newPeer(); NET.peer = peer;
+  const timer = setTimeout(() => { if (!S.started){ lobbyMsg("Room " + code + " ကို ရှာမတွေ့ပါ · code ကို ပြန်စစ်ပါ"); try { peer.destroy(); } catch(e){} } }, 15000);
+  peer.on("open", () => {
+    const conn = peer.connect(PREFIX + code, { reliable:true }); NET.host = conn;
+    conn.on("open", () => conn.send({ t:"hello", c:myChar }));
+    conn.on("data", d => {
+      if (!d || typeof d !== "object") return;
+      if (d.t === "taken"){ clearTimeout(timer); lobbyMsg(byId[myChar].p.name + " ကို တခြားသူ ယူထားပြီ · တခြားလူ ရွေးပြီး ပြန် join ပါ"); try { conn.close(); peer.destroy(); } catch(e){} return; }
+      if (d.t === "welcome"){
+        clearTimeout(timer); NET.code = code; NET.hostSeen = performance.now(); startGame(); applyRoster(d.roster);
+        if (d.meeting) applyEvent({ type:"meet", by:"" });
+        if (d.chase){ applyEvent({ type:"grab", by:d.chase.g, to:d.chase.v }); S.chase.t = d.chase.t; S.chase.freeze = d.chase.freeze; }
+        return;
+      }
+      if (d.t === "roster") applyRoster(d.roster);
+      else if (d.t === "snap"){ NET.hostSeen = performance.now(); applySnap(d.s); }
+      else if (d.t === "ev" && d.e) applyEvent(d.e);
+    });
+    conn.on("close", () => { if (S.started) hostGone(); });
+  });
+  peer.on("error", err => {
+    const type = err && err.type || String(err);
+    if (!S.started){ clearTimeout(timer); lobbyMsg(type === "peer-unavailable" ? "Room " + code + " ကို ရှာမတွေ့ပါ · code ကို ပြန်စစ်ပါ" : "ချိတ်မရပါ (" + type + ")"); }
+    else if (type !== "peer-unavailable") flash("Network error · " + type);
+  });
+}
+function hostGone(){
+  S.mode = "gone";
+  $("endIcon").textContent = "🔌"; $("endTitle").textContent = "Room ပိတ်သွားပြီ";
+  $("endText").textContent = "Host ထွက်သွားလို့ ချိတ်ဆက်မှု ပြတ်သွားတယ်။ Room အသစ် ပြန်ဖွင့်ပါ။";
+  $("endBtn").textContent = "Lobby ကို ပြန်သွားမယ်"; $("endPanel").hidden = false;
+}
+
+function sendEvent(e){
+  e.by = myChar;
+  if (NET.isHost){ if (acceptEvent(e)) broadcast({ t:"ev", e }); }
+  else if (NET.host && NET.host.open){ try { NET.host.send({ t:"ev", e }); } catch(err){} }
+}
+function acceptEvent(e){
+  const on = id => !!NET.roster[id];
+  let ok = false;
+  if (e.type === "bonk") ok = on(e.by) && on(e.to) && e.by !== e.to;
+  else if (e.type === "grab") ok = !S.chase && !NET.meeting && on(e.by) && on(e.to) && e.by !== e.to;
+  else if (e.type === "end") ok = !!S.chase && S.chase.g === e.g && S.chase.v === e.v && (e.by === e.g || e.by === e.v);
+  else if (e.type === "meet") ok = !NET.meeting && !S.chase;
+  else if (e.type === "agenda" || e.type === "meetEnd") ok = NET.meeting;
+  if (ok) applyEvent(e);
+  return ok;
+}
+
+function applyRoster(list){
+  const set = new Set(list);
+  ents.forEach(e => {
+    const was = e.online, now = set.has(e.p.id);
+    if (now && !was){
+      e.online = true; e.m.g.visible = !(e === me && view === 4);
+      if (e !== me){ const s = spawnSpot(e); e.x = e.tx = s.x; e.z = e.tz = s.z; e.ry = e.tr = e.p.seat[2] + Math.PI; }
+      if (S.started && e !== me) flash(e.p.name + " ဝင်လာပြီ");
+    } else if (!now && was && e !== me){
+      e.online = false; e.m.g.visible = false; e.bubble = "";
+      if (S.started) flash(e.p.name + " ထွက်သွားပြီ");
+    }
+  });
+  updateRoomLine();
+}
+function applySnap(s){
+  if (!s) return;
+  for (const id in s){
+    const e = byId[id]; if (!e || e === me || !Array.isArray(s[id])) continue;
+    const v = s[id]; e.tx = +v[0] || 0; e.tz = +v[1] || 0; e.tr = +v[2] || 0; e.walking = !!v[3];
+  }
+}
+function mySnap(){ return [Math.round(me.x*100)/100, Math.round(me.z*100)/100, Math.round(me.ry*100)/100, me.moving ? 1 : 0]; }
+function netTick(){
+  if (!S.started || !me) return;
+  const now = performance.now();
+  if (NET.isHost){
+    NET.clients.forEach((c, conn) => { if (now - (conn.seen || now) > 7000){ try { conn.close(); } catch(e){} hostDrop(conn); } });
+    NET.lastSnap[myChar] = mySnap();
+    applySnap(NET.lastSnap);
+    broadcast({ t:"snap", s:NET.lastSnap });
+  } else if (NET.host){
+    if (NET.host.open){ try { NET.host.send({ t:"st", c:myChar, s:mySnap() }); } catch(err){} }
+    if (S.mode !== "gone" && now - (NET.hostSeen || now) > 9000) hostGone();
+  }
+}
+function updateRoomLine(){
+  const n = ents.filter(e => e.online).length;
+  $("roomLine").textContent = NET.code ? "Room " + NET.code + " · " + n + " ယောက် online" + (NET.isHost ? " · host" : "") : "";
+}
+
+function applyEvent(e){
+  const by = byId[e.by], to = byId[e.to];
+  if (e.type === "bonk" && by && to){
+    by.swing = 0.3; to.stun = 0.7; to.bonks = (to.bonks || 0) + 1;
+    const line = to.bonks >= 3 && Math.random() < .6 ? BONK_LINES[5 + ((Math.random()*2)|0)] : BONK_LINES[(Math.random()*5)|0];
+    setSay(to, "💥 " + line, 2.2);
+    if (to === me) flash(by.p.name + " က ခေါင်းခေါက်လိုက်တယ်!");
+    if (by === me) S.bonksTotal++;
+  } else if (e.type === "grab" && by && to){
+    S.chase = { g:e.by, v:e.to, t:22, freeze:2, sent:false };
+    by.m.armL.add(to.laptop); to.laptop.position.set(0.27, -0.42, 0.25); to.laptop.rotation.set(-1.2, 0, 0);
+    setSay(to, "ဟင်?! ငါ့ laptop...", 2);
+    if (by === me) S.mode = "run";
+    else if (to === me){ S.mode = "hunt"; S.myFreeze = 2; }
+    else flash(by.p.name + " က " + to.p.name + " ရဲ့ laptop ကို လုပြေးပြီ!");
+  } else if (e.type === "end"){
+    if (!S.chase) return;
+    const g = byId[S.chase.g], v = byId[S.chase.v];
+    placeLaptopHome(v); g.m.armL.rotation.x = 0;
+    S.chase = null;
+    const caught = !!e.caught;
+    setSay(v, caught ? "ဟား မိပြီ!" : "နောက်တစ်ခါတော့ မိမယ်", 3);
+    if (g === me || v === me){
+      const iWon = (g === me) ? !caught : caught;
+      if (iWon) S.wins++; else S.losses++;
+      S.mode = "ended";
+      $("endIcon").textContent = iWon ? (g === me ? "🏃💨" : "🫵") : (g === me ? "🫵" : "😮‍💨");
+      $("endTitle").textContent = g === me ? (caught ? "မိသွားပြီ! ရှုံးတယ်" : "လွတ်သွားပြီ! နိုင်တယ်") : (caught ? "ဖမ်းမိပြီ! နိုင်တယ်" : "မမိလိုက်ဘူး! ရှုံးတယ်");
+      $("endText").textContent = e.gone ? (byId[e.gone] ? byId[e.gone].p.name : "တစ်ယောက်") + " ထွက်သွားလို့ ပွဲပြီးသွားတယ်။"
+        : g === me ? (caught ? v.p.name + " က laptop ကို ပြန်ယူသွားပြီ။" : v.p.name + " က အချိန်ပြည့် လိုက်ပေမဲ့ မမိဘူး။")
+        : (caught ? g.p.name + " ဆီက laptop ကို ပြန်ရပြီ။" : g.p.name + " က ၂၂ စက္ကန့်လုံး ပြေးလွတ်သွားတယ်။");
+      $("endBtn").textContent = "ရုံးကို ပြန်သွားမယ်"; $("endPanel").hidden = false; $("endBtn").focus();
+    } else {
+      S.mode = "free";
+      flash(caught ? v.p.name + " က " + g.p.name + " ကို ဖမ်းမိသွားပြီ" : g.p.name + " လွတ်သွားပြီ");
+    }
+  } else if (e.type === "meet"){
+    NET.meeting = true; S.meetIdx = 0; S.mode = "gather";
+    const list = ents.filter(x => x.online);
+    const i = Math.max(0, list.indexOf(me));
+    const spot = meetingSpot(i, Math.max(2, list.length));
+    me.target = { x:spot.x, z:spot.z }; me.autoWalk = true;
+    if (by) setSay(by, "Meeting လုပ်မယ်! whiteboard ဆီ လာခဲ့", 2.5);
+    flash((by ? by.p.name : "တစ်ယောက်") + " က meeting ခေါ်လိုက်ပြီ");
+  } else if (e.type === "agenda"){
+    S.meetIdx = Math.max(0, Math.min(AGENDA.length - 1, e.i|0));
+    renderAgenda(); if (by) speakAgenda(by);
+  } else if (e.type === "meetEnd"){
+    NET.meeting = false; $("meetPanel").hidden = true; me.autoWalk = false; me.target = null;
+    if (S.mode === "gather" || S.mode === "meeting") S.mode = "free";
+    flash("Meeting ပြီးပြီ");
+  }
+}
 
 // ---------- Input ----------
 const keys = {};
 const joy = { x:0, z:0 };
+function panelOpen(){ return !$("lookPanel").hidden || !$("endPanel").hidden || !$("intro").hidden; }
 window.addEventListener("keydown", ev => {
-  const k = ev.code; keys[k] = true;
-  if (!S.started || !$("lookPanel").hidden || !$("meetPanel").hidden || !$("endPanel").hidden) return;
+  const k = ev.code;
+  if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+  keys[k] = true;
+  if (!S.started || panelOpen()) return;
   if (k === "KeyV") setView(view + 1);
   if (k === "KeyE") doLook(); if (k === "KeyF") doBonk(); if (k === "KeyG") doGrab(); if (k === "KeyQ") doMeeting();
   if (k.startsWith("Arrow") || k === "Space") ev.preventDefault();
 });
 window.addEventListener("keyup", ev => { keys[ev.code] = false; });
+window.addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 $("viewBtn").addEventListener("click", () => setView(view + 1));
 $("aLook").addEventListener("click", () => doLook());
 $("aHit").addEventListener("click", () => doBonk());
@@ -455,98 +719,54 @@ $("aMeet").addEventListener("click", () => doMeeting());
 // ---------- Actions ----------
 function nearest(maxD){
   let best = null, bd = maxD;
-  ents.forEach(e => { if (e === me || e.mode === "chase") return; const d = Math.hypot(e.x - me.x, e.z - me.z); if (d < bd){ bd = d; best = e; } });
+  ents.forEach(e => { if (e === me || !e.online) return; const d = Math.hypot(e.x - me.x, e.z - me.z); if (d < bd){ bd = d; best = e; } });
   return best;
 }
 function doLook(){
-  if (S.mode !== "free") return; const e = nearest(1.9); if (!e) return flash("လူတစ်ယောက်ယောက်နား သွားပါ");
+  if (S.mode !== "free") return; const e = nearest(1.9); if (!e) return flash("တစ်ယောက်ယောက်နား သွားပါ");
   $("lkName").textContent = e.p.name; $("lkRole").textContent = e.p.role.toUpperCase(); $("lkApp").textContent = e.p.app; $("lkTask").textContent = e.p.task;
-  $("lkFill").style.width = Math.round(e.prog) + "%"; $("lkPct").textContent = "progress " + Math.round(e.prog) + "% · ခေါက်ခံရ " + e.bonks + " ကြိမ်";
+  const pr = 35 + ((e.p.id.length * 17 + (e.bonks||0) * 3) % 60);
+  $("lkFill").style.width = pr + "%"; $("lkPct").textContent = "progress " + pr + "% · ခေါက်ခံရ " + (e.bonks||0) + " ကြိမ်";
   $("lkSay").textContent = e.p.name + ": “" + e.p.says[(Math.random()*e.p.says.length)|0] + "”";
   $("lookPanel").hidden = false; $("lkClose").focus();
 }
 $("lkClose").addEventListener("click", () => { $("lookPanel").hidden = true; });
-
 function doBonk(){
-  if (S.mode !== "free") return;
-  S.swing = 0.3;
-  const e = nearest(1.6); if (!e) return;
-  e.bonks++; S.bonksTotal++; e.stun = 0.7; e.prog = Math.max(0, e.prog - 4);
-  S.prod = Math.max(0, S.prod - 3);
-  const line = e.bonks >= 3 && Math.random() < .6 ? BONK_LINES[5 + ((Math.random()*2)|0)] : BONK_LINES[(Math.random()*5)|0];
-  setSay(e, "💥 " + line, 2.2);
+  if (S.mode !== "free" && S.mode !== "run" && S.mode !== "hunt") return;
+  const e = nearest(1.6);
+  if (!e){ me.swing = 0.3; return; }
+  sendEvent({ type:"bonk", to:e.p.id });
 }
-
 function doGrab(){
   if (S.mode !== "free") return;
-  const e = nearest(1.7); if (!e) return flash("Laptop လုဖို့ လူတစ်ယောက်နား ကပ်ပါ");
-  if (e.mode !== "sit") return flash(e.p.name + " ထိုင်ပြီး အလုပ်လုပ်နေမှ လုလို့ရမယ်");
-  S.mode = "chase"; S.chase = e; S.chaseT = 22;
-  me.m.armL.add(e.laptop); e.laptop.position.set(0.27, -0.42, 0.25); e.laptop.rotation.set(-1.2, 0, 0);
-  me.m.armL.rotation.x = -1.2; me.m.armR.rotation.x = -1.2;
-  standUp(e); e.mode = "chase"; e.freeze = 2; e.dash = 4.5; e.dashOn = 0; e.stuck = 0; e.nudge = 0;
-  setSay(e, "ဟင်?! ငါ့ laptop...", 2);
-  S.prod = Math.max(0, S.prod - 8);
-  ents.forEach(o => { if (o !== e && o !== me && o.mode === "sit" && Math.random() < .5) setSay(o, ["ပြေး ပြေး!","ဟားဟား","ဖမ်း ဖမ်း!"][(Math.random()*3)|0], 2); });
+  if (S.chase) return flash("တစ်ယောက်ယောက် ပြေးနေတုန်းပဲ · ပြီးမှ လုပါ");
+  const e = nearest(1.7); if (!e) return flash("Laptop လုဖို့ တစ်ယောက်ယောက်နား ကပ်ပါ");
+  sendEvent({ type:"grab", to:e.p.id });
 }
-function endChase(won){
-  const e = S.chase; S.mode = "ended"; e.mode = "idle";
-  placeLaptopHome(e); me.m.armL.rotation.x = 0; me.m.armR.rotation.x = 0;
-  if (won){ S.wins++; } else { S.losses++; }
-  $("endIcon").textContent = won ? "🏃💨" : "🫵";
-  $("endTitle").textContent = won ? "လွတ်သွားပြီ! နိုင်တယ်" : "မိသွားပြီ! ရှုံးတယ်";
-  $("endText").textContent = won ? e.p.name + " က အချိန်ပြည့် လိုက်ပေမဲ့ မမိဘူး။ Laptop ကို ပြန်ပေးလိုက်ပါပြီ။"
-                                 : e.p.name + " က laptop ကို ပြန်ယူသွားပြီ။ နောက်တစ်ခါ ပိုမြန်မြန် ပြေးပါ။";
-  $("endPanel").hidden = false; $("endBtn").focus();
-  setSay(e, won ? "နောက်တစ်ခါတော့ မိမယ်" : "ဟား မိပြီ!", 3);
+function doMeeting(){
+  if (S.mode !== "free" || S.chase) return;
+  sendEvent({ type:"meet" });
 }
 $("endBtn").addEventListener("click", () => {
-  $("endPanel").hidden = true; const e = S.chase; S.chase = null; S.mode = "free";
-  walkTo(e, e.p.seat[0], e.p.seat[1], () => sitDown(e));
+  if (S.mode === "gone"){ location.href = location.pathname + location.search; return; }
+  $("endPanel").hidden = true; S.mode = NET.meeting ? "gather" : "free";
 });
 
 // meeting
 function meetingSpot(i, n){ const a = -1.05 + 2.1 * (n === 1 ? 0.5 : i/(n-1)); return { x:-5.2 + 2.7*Math.cos(a), z:-2.6 + 2.7*Math.sin(a) }; }
-function doMeeting(){
-  if (S.mode !== "free") return;
-  S.mode = "meeting-gather"; S.meetIdx = 0;
-  const others = ents.filter(e => e !== me);
-  others.forEach((e, i) => { const s = meetingSpot(i, others.length); setSay(e, "လာပြီ!", 1.5); standUp(e); walkTo(e, s.x, s.z, () => { e.mode = "meet"; e.ry = Math.atan2(-5.2 - e.x, -2.6 - e.z); }); });
-  me.target = { x:-4.55, z:-2.6 }; me.autoWalk = true;
-  flash("Meeting ခေါ်လိုက်ပြီ · whiteboard ဆီ စုနေကြတယ်");
-}
-function openAgenda(){
-  S.mode = "meeting";
+function renderAgenda(){
   const ol = $("agenda"); ol.innerHTML = "";
   AGENDA.forEach((a, i) => { const li = document.createElement("li"); li.textContent = a; if (i === S.meetIdx) li.className = "now"; ol.appendChild(li); });
-  $("meetPanel").hidden = false; $("meetNext").focus();
-  speakAgenda();
 }
-function speakAgenda(){
-  const others = ents.filter(e => e !== me);
+function speakAgenda(who){
   const lines = [["ဒီအပတ် post ၅ ခု တင်ပြီးပြီ","reach ၁၂% တက်တယ်"],["CPL နည်းနည်း ကျလာပြီ","creative အသစ် စမ်းမယ်"],["target ရဲ့ ၇၀% ရောက်ပြီ","referral ထပ်တွန်းမယ်"],["video ၃ ပုဒ် queue ထဲမှာ","poster ၂ ခု review စောင့်"],["Ads, Content, Enrollment","ok ပါ!"]][S.meetIdx];
-  const a = others[(Math.random()*others.length)|0], b = others[(Math.random()*others.length)|0];
-  setSay(a, lines[0], 4); if (b !== a) setTimeout(() => setSay(b, lines[1], 3.5), 900);
-  [...$("agenda").children].forEach((li, i) => li.className = i === S.meetIdx ? "now" : "");
+  setSay(who, lines[(Math.random()*2)|0], 4);
 }
-$("meetNext").addEventListener("click", () => { S.meetIdx = Math.min(AGENDA.length - 1, S.meetIdx + 1); speakAgenda(); });
-$("meetEnd").addEventListener("click", () => {
-  $("meetPanel").hidden = true; S.mode = "free"; S.prod = Math.min(100, S.prod + 10);
-  flash("Meeting ပြီးပြီ · productivity +10%");
-  ents.forEach(e => { if (e === me) return; e.prog = Math.min(100, e.prog + 8); walkTo(e, e.p.seat[0], e.p.seat[1], () => sitDown(e)); });
-});
-
-function standUp(e){
-  if (e.mode !== "sit" && e.mode !== "player") return;
-  const sx = e.p.seat[0], sz = e.p.seat[1], fx = Math.sin(e.p.seat[2]), fz = Math.cos(e.p.seat[2]);
-  const tries = [[-fx*0.5,-fz*0.5],[fz*0.6,-fx*0.6],[-fz*0.6,fx*0.6],[-fx*0.9,-fz*0.9],[fz*1.0,-fx*1.0],[-fz*1.0,fx*1.0],[-0.65,0.75],[-0.65,-0.75]];
-  for (const o of tries){ if (!blocked(sx + o[0], sz + o[1])){ e.x = sx + o[0]; e.z = sz + o[1]; return; } }
-}
-function walkTo(e, x, z, after){ standUp(e); e.mode = "walk"; e.target = { x, z }; e.after = after; }
-function sitDown(e){ e.mode = "sit"; e.x = e.p.seat[0]; e.z = e.p.seat[1]; e.ry = e.p.seat[2]; }
+$("meetNext").addEventListener("click", () => sendEvent({ type:"agenda", i:S.meetIdx + 1 }));
+$("meetEnd").addEventListener("click", () => sendEvent({ type:"meetEnd" }));
 
 let flashT = 0;
-function flash(msg){ $("status").textContent = msg; flashT = 2.5; }
+function flash(msg){ $("status").textContent = msg; flashT = 2.6; }
 
 // ---------- Loop ----------
 const clock = new THREE.Clock();
@@ -554,71 +774,52 @@ const v3 = new THREE.Vector3();
 let t = 0;
 function update(dt){
   t += dt;
-  // player
   let ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + joy.x;
   let iz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + joy.z;
-  const busy = !$("lookPanel").hidden || !$("meetPanel").hidden || !$("endPanel").hidden || S.mode === "ended";
-  if (busy){ ix = iz = 0; }
+  if (panelOpen() || S.mode === "ended" || S.mode === "gone" || S.mode === "meeting" || S.mode === "gather" || (S.mode === "hunt" && S.myFreeze > 0)) ix = iz = 0;
+  if (S.myFreeze > 0){ S.myFreeze -= dt; if (S.myFreeze <= 0 && S.mode === "hunt") setSay(me, "ဟေ့! ငါ့ laptop ပြန်ပေး!!", 2.5); }
+  me.moving = false;
   if (me.autoWalk && me.target){
     const dx = me.target.x - me.x, dz = me.target.z - me.z, d = Math.hypot(dx, dz);
-    if (d < 0.15){ me.autoWalk = false; me.target = null; me.ry = -Math.PI/2; } else { ix = dx/d; iz = dz/d; me.x += ix * 3.2 * dt; me.z += iz * 3.2 * dt; ix = iz = 0; me.ry = Math.atan2(dx, dz); me.walkT += dt * 10; }
+    if (d < 0.15){ me.autoWalk = false; me.target = null; me.ry = Math.atan2(-5.2 - me.x, -2.6 - me.z);
+      if (S.mode === "gather"){ S.mode = "meeting"; renderAgenda(); $("meetPanel").hidden = false; $("meetNext").focus(); } }
+    else { const sp = Math.min(d, 3.4 * dt); me.x += dx/d * sp; me.z += dz/d * sp; me.ry = Math.atan2(dx, dz); me.walkT += dt * 10; me.moving = true; }
   }
+  const speed = S.mode === "hunt" ? 5.9 : S.mode === "run" ? 5.4 : 3.6;
   if (view === 4 && !me.autoWalk){
     me.ry -= ix * 2.6 * dt; const f = -iz;
-    if (Math.abs(f) > 0.08){ const sp = (S.mode === "chase" ? 5.4 : 3.6) * f; move(me, Math.sin(me.ry) * sp * dt, Math.cos(me.ry) * sp * dt); me.walkT += dt * 12; }
+    if (Math.abs(f) > 0.08){ move(me, Math.sin(me.ry) * speed * f * dt, Math.cos(me.ry) * speed * f * dt); me.walkT += dt * 12; me.moving = true; }
     ix = iz = 0;
   }
   const il = Math.hypot(ix, iz);
-  if (il > 0.08){
-    const sp = (S.mode === "chase" ? 5.4 : 3.6) * Math.min(1, il);
-    move(me, ix/il * sp * dt, iz/il * sp * dt); me.ry = Math.atan2(ix, iz); me.walkT += dt * 12;
-  }
-  me.mode = "player";
+  if (il > 0.08){ const sp = speed * Math.min(1, il); move(me, ix/il * sp * dt, iz/il * sp * dt); me.ry = Math.atan2(ix, iz); me.walkT += dt * 12; me.moving = true; }
 
-  // NPCs
+  // remote players: smooth toward network targets
   ents.forEach(e => {
-    if (e === me) return;
-    if (e.mode === "walk" && e.target){
-      const dx = e.target.x - e.x, dz = e.target.z - e.z, d = Math.hypot(dx, dz);
-      if (d < 0.1){ e.x = e.target.x; e.z = e.target.z; e.target = null; const a = e.after; e.after = null; if (a) a(); }
-      else { const sp = 2.6; e.x += dx/d * Math.min(d, sp*dt); e.z += dz/d * Math.min(d, sp*dt); e.ry = Math.atan2(dx, dz); e.walkT += dt * 10; }
-    } else if (e.mode === "chase" && e.freeze > 0){
-      e.freeze -= dt; e.ry = Math.atan2(me.x - e.x, me.z - e.z);
-      if (e.freeze <= 0) setSay(e, "ဟေ့! ငါ့ laptop ပြန်ပေး!!", 2.5);
-    } else if (e.mode === "chase"){
-      e.dash -= dt; if (e.dash <= 0){ e.dashOn = 0.9; e.dash = 3 + Math.random()*1.5; setSay(e, "ရပ်!!", 0.9); }
-      e.dashOn = Math.max(0, e.dashOn - dt);
-      const sp = e.dashOn > 0 ? 7.6 : 4.7;
-      let dx = me.x - e.x, dz = me.z - e.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
-      if (e.nudge > 0){ e.nudge -= dt; const s = e.nudgeSide; const nx = -dz * s, nz = dx * s; dx = nx; dz = nz; }
-      const bx = e.x, bz = e.z; move(e, dx * sp * dt, dz * sp * dt);
-      if (Math.hypot(e.x - bx, e.z - bz) < sp * dt * 0.3){ e.stuck += dt; if (e.stuck > 0.25){ e.nudge = 0.45; e.nudgeSide = Math.random() < .5 ? 1 : -1; e.stuck = 0; } } else e.stuck = 0;
-      e.ry = Math.atan2(me.x - e.x, me.z - e.z); e.walkT += dt * 14;
-      if (Math.hypot(me.x - e.x, me.z - e.z) < 0.7 && S.mode === "chase") endChase(false);
-    } else if (e.mode === "sit"){
-      e.prog = Math.min(100, e.prog + dt * (e.p.lounge ? 0.15 : 0.9));
-      e.sayT -= dt; if (e.sayT <= 0){ e.sayT = 8 + Math.random()*12; if (Math.random() < .5) setSay(e, e.p.says[(Math.random()*e.p.says.length)|0], 2.6); }
-    }
-    if (e.bubT > 0){ e.bubT -= dt; if (e.bubT <= 0) e.bubble = ""; }
-    e.stun = Math.max(0, e.stun - dt);
+    if (e === me || !e.online) return;
+    const k = Math.min(1, dt * 12);
+    e.x += (e.tx - e.x) * k; e.z += (e.tz - e.z) * k;
+    let dr = e.tr - e.ry; while (dr > Math.PI) dr -= Math.PI*2; while (dr < -Math.PI) dr += Math.PI*2; e.ry += dr * k;
+    if (e.walking) e.walkT += dt * 11;
   });
+  ents.forEach(e => { if (e.bubT > 0){ e.bubT -= dt; if (e.bubT <= 0) e.bubble = ""; } e.stun = Math.max(0, (e.stun||0) - dt); e.swing = Math.max(0, (e.swing||0) - dt); });
 
-  if (S.mode === "meeting-gather"){
-    if (ents.every(e => e === me || e.mode === "meet") && !me.autoWalk) openAgenda();
-  }
-  if (S.mode === "chase"){
-    S.chaseT -= dt; $("timer").textContent = "⏱ " + Math.max(0, S.chaseT).toFixed(1) + "s";
-    $("status").textContent = S.chase.freeze > 0 ? "ပြေး! " + S.chase.p.name + " မသိသေးဘူး · " + S.chase.freeze.toFixed(1) + "s" : S.chase.p.name + " ရဲ့ laptop ကို ယူပြေးနေတယ်! မမိစေနဲ့";
-    if (S.chaseT <= 0) endChase(true);
+  // chase
+  if (S.chase){
+    S.chase.t -= dt; S.chase.freeze = Math.max(0, S.chase.freeze - dt);
+    const g = byId[S.chase.g], v = byId[S.chase.v];
+    $("timer").textContent = "⏱ " + Math.max(0, S.chase.t).toFixed(1) + "s";
+    if (me === g) $("status").textContent = S.chase.freeze > 0 ? "ပြေး! " + v.p.name + " မသိသေးဘူး · " + S.chase.freeze.toFixed(1) + "s" : v.p.name + " လိုက်လာပြီ! မမိစေနဲ့";
+    else if (me === v) $("status").textContent = S.myFreeze > 0 ? "ဟင်?! laptop ပျောက်သွားပြီ... " + Math.max(0, S.myFreeze).toFixed(1) + "s" : g.p.name + " ကို လိုက်ဖမ်း! laptop ပြန်ယူ";
+    else $("status").textContent = g.p.name + " ပြေးနေတယ် · " + v.p.name + " လိုက်နေတယ်";
+    if (!S.chase.sent){
+      if (me === v && S.myFreeze <= 0 && Math.hypot(g.x - me.x, g.z - me.z) < 0.8){ S.chase.sent = true; sendEvent({ type:"end", g:S.chase.g, v:S.chase.v, caught:true }); }
+      else if (me === g && S.chase.t <= 0){ S.chase.sent = true; sendEvent({ type:"end", g:S.chase.g, v:S.chase.v, caught:false }); }
+    }
   } else { $("timer").textContent = ""; }
 
-  // productivity drift
-  const working = ents.filter(e => e !== me && e.mode === "sit" && !e.p.lounge).length;
-  if (S.mode === "free") S.prod = Math.min(100, S.prod + dt * 0.08 * working - dt * 0.1);
-  $("prod").style.width = Math.round(S.prod) + "%"; $("prodNum").textContent = Math.round(S.prod) + "%";
-  $("prod").style.background = S.prod > 60 ? "var(--green)" : S.prod > 30 ? "#e0a128" : "var(--red)";
-  $("score").textContent = "ပြေးနိုင် " + S.wins + " · မိ " + S.losses + " · ခေါက်ပြီး " + S.bonksTotal;
-  if (flashT > 0){ flashT -= dt; if (flashT <= 0 && S.mode === "free") $("status").textContent = "ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ"; }
+  $("score").textContent = "ပြေးနိုင်/ဖမ်းမိ " + S.wins + " · ရှုံး " + S.losses + " · ခေါက်ပြီး " + S.bonksTotal;
+  if (flashT > 0){ flashT -= dt; if (flashT <= 0 && !S.chase) $("status").textContent = S.mode === "free" ? "ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ" : $("status").textContent; }
 
   // hint
   const n = S.mode === "free" ? nearest(1.8) : null;
@@ -628,60 +829,63 @@ function update(dt){
   else if (S.mode === "free"){ hint.hidden = false; hint.innerHTML = "<span class='keys'><kbd>Q</kbd> Meeting ခေါ်ရန် · </span>တစ်ယောက်ယောက်နား သွားပါ"; }
   else hint.hidden = true;
 
-  // pose everything
-  S.swing = Math.max(0, S.swing - dt);
+  // pose
   ents.forEach(e => {
+    if (!e.online) return;
     const m = e.m;
-    m.g.position.set(e.x, 0, e.z);
-    const seated = e.mode === "sit";
-    if (seated){
-      m.g.rotation.y = e.p.seat[2];
-      m.body.position.y = e.p.lounge ? -0.12 : -0.05;
-      m.body.rotation.x = e.p.lounge ? -0.45 : 0;
-      m.legL.rotation.x = m.legR.rotation.x = -1.4; m.legL.position.set(-0.09, 0.47, 0.22); m.legR.position.set(0.09, 0.47, 0.22);
-      if (e !== me){ m.armL.rotation.x = m.armR.rotation.x = e.p.lounge ? -0.3 : -1.1 + Math.sin(t*14 + e.x)*0.06; }
-    } else {
-      m.g.rotation.y = e.ry;
-      m.body.rotation.x = 0;
-      m.legL.position.set(-0.09, 0.25, 0); m.legR.position.set(0.09, 0.25, 0);
-      const w = Math.sin(e.walkT); m.legL.rotation.x = w * 0.6; m.legR.rotation.x = -w * 0.6;
-      m.body.position.y = Math.abs(Math.cos(e.walkT)) * 0.05;
-      if (!(e === me && S.mode === "chase")){ m.armL.rotation.x = -w * 0.5; m.armR.rotation.x = w * 0.5; }
-    }
+    m.g.position.set(e.x, 0, e.z); m.g.rotation.y = e.ry; m.body.rotation.x = 0;
+    m.legL.position.set(-0.09, 0.25, 0); m.legR.position.set(0.09, 0.25, 0);
+    const walking = e === me ? me.moving : e.walking;
+    const w = walking ? Math.sin(e.walkT) : 0;
+    m.legL.rotation.x = w * 0.6; m.legR.rotation.x = -w * 0.6;
+    m.body.position.y = walking ? Math.abs(Math.cos(e.walkT)) * 0.05 : 0;
+    const holding = S.chase && S.chase.g === e.p.id;
+    m.armL.rotation.x = holding ? -1.2 : -w * 0.5;
+    m.armR.rotation.x = e.swing > 0 ? -2.6 + (0.3 - e.swing) * 9 : (holding ? -1.2 : w * 0.5);
     m.body.rotation.z = e.stun > 0 ? Math.sin(e.stun * 40) * 0.25 : 0;
   });
-  if (S.mode !== "chase") me.m.armR.rotation.x = S.swing > 0 ? -2.6 + (0.3 - S.swing) * 9 : me.m.armR.rotation.x;
 
   // tags
-  const w = stage.clientWidth, h = stage.clientHeight;
+  const W = stage.clientWidth, H = stage.clientHeight;
   ents.forEach(e => {
-    v3.set(e.x, e.mode === "sit" ? 1.55 : 1.75, e.z).project(camera);
+    if (!e.online || (e === me && view === 4)){ e.tag.style.display = "none"; return; }
+    v3.set(e.x, 1.75, e.z).project(camera);
     e.tag.style.display = v3.z > 1 || Math.abs(v3.x) > 1.2 ? "none" : "";
-    e.tag.style.left = ((v3.x + 1) / 2 * w) + "px"; e.tag.style.top = ((1 - v3.y) / 2 * h) + "px";
+    e.tag.style.left = ((v3.x + 1) / 2 * W) + "px"; e.tag.style.top = ((1 - v3.y) / 2 * H) + "px";
     if (e.bubEl.textContent !== e.bubble) e.bubEl.textContent = e.bubble;
   });
 }
-function loop(){ requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); if (S.started) update(dt); else idle(dt); updateCamera(dt); renderer.render(scene, camera); }
-function idle(dt){
-  t += dt;
-  ents.forEach(e => { const m = e.m; m.g.position.set(e.x, 0, e.z); m.g.rotation.y = e.p.seat[2]; m.body.position.y = e.p.lounge ? -0.12 : -0.05; m.body.rotation.x = e.p.lounge ? -0.45 : 0;
-    m.legL.rotation.x = m.legR.rotation.x = -1.4; m.legL.position.set(-0.09, 0.47, 0.22); m.legR.position.set(0.09, 0.47, 0.22);
-    m.armL.rotation.x = m.armR.rotation.x = e.p.lounge ? -0.3 : -1.1 + Math.sin(t*14 + e.x)*0.06; });
-  const w = stage.clientWidth, h = stage.clientHeight;
-  ents.forEach(e => { v3.set(e.x, 1.55, e.z).project(camera); e.tag.style.left = ((v3.x + 1)/2*w) + "px"; e.tag.style.top = ((1 - v3.y)/2*h) + "px"; });
-}
+function loop(){ requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); if (S.started) update(dt); else ents.forEach(e => e.tag.style.display = "none"); updateCamera(dt); renderer.render(scene, camera); }
 
-// ---------- Start ----------
+// ---------- Lobby ----------
 const sel = $("who");
-PEOPLE.forEach((p, i) => { const o = document.createElement("option"); o.value = i; o.textContent = p.name; sel.appendChild(o); });
-$("startBtn").addEventListener("click", () => {
-  me = ents[+sel.value];
-  me.mode = "player"; standUp(me); if (me.p.lounge){ me.x = 4.1; me.z = 1.6; } me.ry = me.p.seat[2] + Math.PI; me.walkT = 0;
-  if (blocked(me.x, me.z)){ me.x = 0; me.z = 4.8; }
+PEOPLE.forEach((p, i) => { const o = document.createElement("option"); o.value = p.id; o.textContent = p.name + " · " + p.role; sel.appendChild(o); });
+try { const saved = localStorage.getItem("rn9-who"); if (saved && byId[saved]) sel.value = saved; } catch(e){}
+const hashCode = (location.hash || "").replace("#", "").toUpperCase();
+if (/^[A-Z0-9]{4}$/.test(hashCode)){ $("codeIn").value = hashCode; lobbyMsg("Room " + hashCode + " ကို ဖိတ်ထားတယ် · ကိုယ့်နာမည်ရွေးပြီး Join နှိပ်ပါ"); }
+function pick(){ myChar = sel.value; try { localStorage.setItem("rn9-who", myChar); } catch(e){} }
+$("hostBtn").addEventListener("click", () => { if (NET.peer && !S.started) return; pick(); hostRoom(); });
+$("joinBtn").addEventListener("click", () => { pick(); joinRoom($("codeIn").value); });
+$("codeIn").addEventListener("keydown", ev => { if (ev.key === "Enter"){ pick(); joinRoom($("codeIn").value); } });
+$("inviteBtn").addEventListener("click", async () => {
+  const link = location.origin + location.pathname + location.search + "#" + NET.code;
+  try { await navigator.clipboard.writeText(link); flash("Invite link copy ကူးပြီးပြီ · team group ထဲ paste လုပ်ပါ"); }
+  catch(e){ flash("Room code: " + NET.code); }
+});
+function startGame(){
+  if (S.started) return;
+  me = byId[myChar];
+  const s = spawnSpot(me); me.x = s.x; me.z = s.z; me.ry = me.p.seat[2] + Math.PI; me.walkT = 0; me.online = true;
   me.tag.classList.add("me"); me.tag.querySelector(".nm").textContent = me.p.name + " (ကိုယ်)";
   me.m.armR.add(roll); roll.position.set(0, -0.45, 0.12); roll.rotation.x = Math.PI/2;
-  $("intro").hidden = true; S.started = true; clock.getDelta(); setView(view);
-});
+  $("intro").hidden = true; $("inviteBtn").hidden = false; S.started = true; clock.getDelta(); setView(view);
+  if (NET.isHost) history.replaceState(null, "", location.pathname + location.search + "#" + NET.code);
+  updateRoomLine();
+  flash(NET.isHost ? "Room " + NET.code + " ဖွင့်ပြီးပြီ · Invite နှိပ်ပြီး team ကို ဖိတ်ပါ" : "Room " + NET.code + " ထဲ ရောက်ပြီ");
+  setInterval(netTick, 80);
+}
+window.addEventListener("beforeunload", () => { try { if (NET.peer) NET.peer.destroy(); } catch(e){} });
+window.__rn9 = { S, NET, ents, byId, renderer, get me(){ return me; }, sendEvent };
 loop();
 })();
 </script>
