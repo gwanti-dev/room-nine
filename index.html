@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Room Nine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a fixed diorama camera over the office; HUD styled like whiteboard sticky notes in marker ink. Single light look by design. */
+:root{
+  --paper:#fbfaf5;
+  --ink:#1e1f24;
+  --soft:#6b6a66;
+  --blue:#2b59c3;
+  --red:#d6453d;
+  --green:#2f9a5b;
+  --note:#ffe98a;
+  --bg:#d9d4ca;
+  --f-mm:"Padauk","Noto Sans Myanmar","Myanmar Text",sans-serif;
+  --f-ui:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-mm);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;}
+#stage{position:fixed;inset:0;}
+#stage canvas{display:block;width:100%;height:100%;}
+.note{background:var(--paper);border:2px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink);}
+
+#top{position:fixed;z-index:5;top:calc(10px + env(safe-area-inset-top,0px));left:max(12px, env(safe-area-inset-left,0px));right:max(12px, env(safe-area-inset-right,0px));
+  display:flex;gap:10px;align-items:flex-start;justify-content:space-between;pointer-events:none;flex-wrap:wrap;}
+#prodBox{padding:8px 12px;min-width:200px;}
+.lbl{font-family:var(--f-ui);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--soft);}
+.bar{height:10px;border:2px solid var(--ink);border-radius:3px;margin-top:5px;overflow:hidden;background:#fff;}
+#prod{height:100%;width:70%;background:var(--green);transition:width .3s;}
+#prodNum{font-family:var(--f-ui);font-weight:700;font-size:13px;margin-left:6px;color:var(--ink);}
+#viewBtn{pointer-events:auto;cursor:pointer;padding:6px 12px;font-family:var(--f-ui);font-weight:700;font-size:14px;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:2px;order:3;}
+#viewBtn:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+#statusBox{padding:8px 12px;max-width:min(420px, 60vw);}
+#status{font-size:15px;font-weight:700;line-height:1.6;}
+#timer{font-family:var(--f-ui);font-weight:700;font-size:26px;color:var(--red);font-variant-numeric:tabular-nums;}
+#score{font-family:var(--f-ui);font-size:12px;color:var(--soft);}
+
+.tag{position:fixed;z-index:3;transform:translate(-50%,-100%);pointer-events:none;text-align:center;white-space:nowrap;}
+.tag .nm{display:inline-block;font-family:var(--f-ui);font-weight:700;font-size:11px;padding:1px 6px;border:1.5px solid var(--ink);border-radius:4px;background:var(--paper);}
+.tag.me .nm{background:var(--note);}
+.tag.near .nm{background:var(--blue);color:#fff;border-color:var(--blue);}
+.tag .bub{display:block;margin:0 auto 3px;font-size:13px;font-weight:700;padding:2px 8px;background:#fff;border:1.5px solid var(--ink);border-radius:10px;max-width:220px;white-space:normal;line-height:1.5;}
+.tag .bub:empty{display:none;}
+
+#hint{position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:8px 14px;font-size:14px;pointer-events:none;text-align:center;}
+#hint kbd{font-family:var(--f-ui);font-weight:700;font-size:12px;border:1.5px solid var(--ink);border-radius:3px;padding:0 5px;background:var(--note);margin:0 2px;}
+
+#actions{position:fixed;z-index:6;right:max(14px, env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:none;grid-template-columns:repeat(2,64px);gap:8px;}
+.act{height:56px;border:2px solid var(--ink);border-radius:10px;background:var(--paper);box-shadow:2px 2px 0 var(--ink);font-family:var(--f-mm);font-size:14px;font-weight:700;color:var(--ink);}
+.act.hit{background:var(--red);color:#fff;} .act.grab{background:var(--note);} .act.meet{background:var(--blue);color:#fff;}
+.act:active{transform:translate(2px,2px);box-shadow:none;}
+#joy{position:fixed;z-index:6;left:max(18px, env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;border:2px dashed var(--ink);background:rgba(251,250,245,.6);display:none;touch-action:none;}
+#knob{position:absolute;left:38px;top:38px;width:44px;height:44px;border-radius:50%;background:var(--ink);}
+@media (pointer:coarse), (max-width:760px){
+  #actions{display:grid;} #joy{display:block;}
+  #hint{bottom:calc(150px + env(safe-area-inset-bottom,0px));font-size:13px;}
+  #hint .keys{display:none;}
+}
+@media (max-width:560px){ #prodBox{min-width:0;} #viewBtn{pointer-events:auto;cursor:pointer;padding:6px 12px;font-family:var(--f-ui);font-weight:700;font-size:14px;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:2px;order:3;}
+#viewBtn:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+#statusBox{max-width:100%;} #status{font-size:13px;} }
+
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(30,31,36,.45);
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));}
+.card{width:100%;max-width:460px;padding:22px 22px 20px;max-height:88vh;overflow:auto;}
+.card h1{font-size:30px;line-height:1.4;margin:4px 0 0;text-wrap:balance;}
+.card h2{font-size:22px;line-height:1.4;margin:4px 0 8px;}
+.card p{font-size:15px;line-height:1.75;margin:8px 0;}
+.rules{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:14px;margin:12px 0 16px;align-items:center;}
+.rules kbd{font-family:var(--f-ui);font-weight:700;font-size:12px;border:1.5px solid var(--ink);border-radius:3px;padding:0 6px;background:var(--note);justify-self:start;}
+label.pick{display:block;font-size:14px;font-weight:700;margin-bottom:6px;}
+select{width:100%;height:44px;font-family:var(--f-ui);font-size:15px;border:2px solid var(--ink);border-radius:6px;background:#fff;padding:0 10px;margin-bottom:14px;}
+.big{width:100%;height:50px;border:2px solid var(--ink);border-radius:8px;background:var(--note);box-shadow:3px 3px 0 var(--ink);font-family:var(--f-mm);font-size:18px;font-weight:700;color:var(--ink);cursor:pointer;}
+.big.alt{background:var(--paper);margin-top:10px;}
+.big:focus-visible, select:focus-visible, .act:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+.screen{border:2px solid var(--ink);border-radius:6px;background:#20232b;color:#e9ecf2;padding:12px;font-family:var(--f-ui);font-size:12px;margin:10px 0;}
+.screen .app{color:#8fb3ff;font-weight:700;margin-bottom:6px;}
+.screen .line{font-family:var(--f-mm);font-size:14px;line-height:1.7;}
+.screen .bar{border-color:#e9ecf2;background:#20232b;}
+.screen .fill{height:100%;background:#7ee0a3;}
+.agenda{font-size:15px;line-height:1.9;margin:6px 0 12px;padding-left:20px;}
+.agenda li.now{color:var(--blue);font-weight:700;}
+.end-big{font-size:40px;text-align:center;margin:4px 0;}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div id="stage"></div>
+
+<div id="top">
+  <div class="note" id="prodBox"><div class="lbl">TEAM PRODUCTIVITY<span id="prodNum">70%</span></div><div class="bar"><div id="prod"></div></div></div>
+  <button class="note" id="viewBtn" type="button"><span class="lbl">VIEW · V</span><span id="viewName">Overview</span></button>
+  <div class="note" id="statusBox"><div id="status">ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ</div><div id="timer"></div><div id="score"></div></div>
+</div>
+<div id="tags"></div>
+<div class="note" id="hint" hidden></div>
+
+<div id="joy"><div id="knob"></div></div>
+<div id="actions">
+  <button class="act" id="aLook" type="button">ကြည့်</button>
+  <button class="act hit" id="aHit" type="button">ခေါက်</button>
+  <button class="act grab" id="aGrab" type="button">လုယူ</button>
+  <button class="act meet" id="aMeet" type="button">Meeting</button>
+</div>
+
+<div class="overlay" id="intro">
+  <div class="card note">
+    <div class="lbl">ROOM NINE · CSMC OFFICE</div>
+    <h1>ရုံးခန်း ဆူပူ</h1>
+    <p>ကိုယ့်ရုံးခန်းထဲမှာ အဖွဲ့သား ၉ ယောက် အလုပ်လုပ်နေကြတယ်။ ဘယ်သူ ဘာလုပ်နေလဲ ကြည့်၊ ပျင်းနေတဲ့သူကို စက္ကူလိပ်နဲ့ ခေါင်းခေါက်၊ meeting ခေါ်၊ ဒါမှမဟုတ် တစ်ယောက်ယောက်ရဲ့ laptop ကို လုယူပြီး ပြေး။ ၂ စက္ကန့် ကြိုပြေးခွင့်ရပြီး စုစုပေါင်း ၂၂ စက္ကန့် မမိရင် နိုင်တယ်။</p>
+    <div class="rules">
+      <kbd>W A S D</kbd><span>လမ်းလျှောက် · Move</span>
+      <kbd>E</kbd><span>ဘာလုပ်နေလဲ ကြည့် · Look</span>
+      <kbd>F</kbd><span>စက္ကူလိပ်နဲ့ ခေါက် · Bonk</span>
+      <kbd>G</kbd><span>Laptop လုယူပြီး ပြေး · Grab</span>
+      <kbd>Q</kbd><span>Meeting ခေါ် · Meeting</span>
+    </div>
+    <label class="pick" for="who">ဘယ်သူအနေနဲ့ ဆော့မလဲ</label>
+    <select id="who"></select>
+    <button class="big" id="startBtn" type="button">ရုံးတက်မယ် ▶</button>
+  </div>
+</div>
+
+<div class="overlay" id="lookPanel" hidden>
+  <div class="card note">
+    <div class="lbl" id="lkRole">WHAT ARE THEY DOING</div>
+    <h2 id="lkName"></h2>
+    <div class="screen">
+      <div class="app" id="lkApp"></div>
+      <div class="line" id="lkTask"></div>
+      <div class="bar" style="margin-top:8px"><div class="fill" id="lkFill"></div></div>
+      <div style="margin-top:6px" id="lkPct"></div>
+    </div>
+    <p id="lkSay"></p>
+    <button class="big" id="lkClose" type="button">ပြန်သွားမယ်</button>
+  </div>
+</div>
+
+<div class="overlay" id="meetPanel" hidden>
+  <div class="card note">
+    <div class="lbl">WEEKLY SYNC · WHITEBOARD</div>
+    <h2>အပတ်စဉ် Meeting</h2>
+    <ol class="agenda" id="agenda"></ol>
+    <button class="big" id="meetNext" type="button">နောက် agenda ▶</button>
+    <button class="big alt" id="meetEnd" type="button">Meeting ပြီးပြီ</button>
+  </div>
+</div>
+
+<div class="overlay" id="endPanel" hidden>
+  <div class="card note">
+    <div class="end-big" id="endIcon"></div>
+    <h2 id="endTitle" style="text-align:center"></h2>
+    <p id="endText" style="text-align:center"></p>
+    <button class="big" id="endBtn" type="button">ရုံးကို ပြန်သွားမယ်</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+let me = null; // the entity the player controls
+
+// ---------- People ----------
+const PEOPLE = [
+  { id:"sithu", name:"Si Thu", role:"Marketing Manager", shirt:0x1e1f24, hair:0x16120f, cap:true, seat:[-0.5, 4.05, Math.PI],
+    app:"Google Slides", task:"Q4 Marketing Strategy deck ချနေတယ်", says:["ROAS ကို ထပ်ကြည့်ဦးမယ်","data ပြပါဦး","ဒီလ target ပြည့်ရမယ်"] },
+  { id:"htoo", name:"Htoo", role:"Account Executive (AE)", shirt:0x2f6fb0, hair:0x1a1410, seat:[-2.6, -4.0, Math.PI/2],
+    app:"Messenger · Content tracker", task:"တခြား department တွေနဲ့ ညှိပြီး တင်မယ့် post တွေကို လိုက်စစ်နေတယ်", says:["Academic team က info ပို့ပြီးပြီ","ဒီ post မှာ စာလုံးပေါင်း မှားနေတယ်","Sales team ကို ပြန်မေးထားတယ်","approve ရရင် schedule လုပ်မယ်"] },
+  { id:"kzn", name:"KZN", role:"Graphic Designer", shirt:0xd6453d, hair:0x221a15, seat:[-2.6, -2.5, Math.PI/2],
+    app:"Photoshop", task:"CIY poster design ဆွဲနေတယ်", says:["font ရွေးနေတုန်း","version 5 ပါပြီ","bulk export လုပ်နေတယ်"] },
+  { id:"kzh", name:"KZH", role:"Videographer", shirt:0x2f9a5b, hair:0x14100d, seat:[-2.6, -1.0, Math.PI/2],
+    app:"Camera footage", task:"ဒီနေ့ shoot ထားတဲ့ footage တွေ စစ်ပြီး backup လုပ်နေတယ်", says:["B-roll ထပ်ရိုက်ရမယ်","lighting ကောင်းတယ်","battery အားသွင်းဦးမယ်"] },
+  { id:"henry", name:"Henry", role:"Graphic Designer", shirt:0xe0a128, hair:0x1c1612, seat:[1.6, -4.0, -Math.PI/2],
+    app:"Illustrator", task:"Gon social post graphic ဆွဲနေတယ်", says:["ဒီအရောင် brand နဲ့ ကိုက်လား","ပြင်ပြီးပြီ review ပေးပါ"] },
+  { id:"hsu", name:"Hsu", role:"Content Marketer", shirt:0xd98fb4, hair:0x2a1a14, long:true, seat:[1.6, -2.5, -Math.PI/2],
+    app:"Notion", task:"Gon content calendar စီနေတယ်", says:["ဒီအပတ် post ၅ ခု","hook ထပ်စဉ်းစားနေတယ်"] },
+  { id:"koie", name:"Koiee", role:"Content Marketer", shirt:0x7a5bc2, hair:0x16120f, seat:[1.6, -1.0, -Math.PI/2],
+    app:"Canva", task:"Carousel slide ၁၀ ခု ပြင်နေတယ်", says:["slide ၆ ရောက်ပြီ","ဒီ caption ကောင်းလား"] },
+  { id:"okkar", name:"Ko Okkar", role:"Video Editor", shirt:0x5b6b78, hair:0x221c18, seat:[2.65, 2.5, -Math.PI/2],
+    app:"DaVinci Resolve", task:"Reel video ကို edit ပြီး color grade လုပ်နေတယ်", says:["render ၈၀% ရောက်ပြီ","ခဏ မထိနဲ့ render နေတယ်","footage ပို့ပေးဦး"] },
+  { id:"white", name:"White", role:"Content Marketer", shirt:0xf2f2ee, hair:0x14100d, seat:[-3.65, 2.5, Math.PI/2],
+    app:"Facebook · Meta Business Suite", task:"Facebook post caption ရေးပြီး schedule လုပ်နေတယ်", says:["caption ၃ မျိုး ရေးထားတယ်","comment တွေ ပြန်ဖြေနေတယ်"] }
+];
+const BONK_LINES = ["အား!","ဘာလုပ်တာလဲဗျ","deadline နီးနေပြီနော်","ခေါင်းကိုက်ပြီ","ကောင်းပြီ အလုပ်လုပ်ပါပြီ","HR ကို တိုင်မယ်","နောက်တစ်ခါ ပြန်ခေါက်မယ်"];
+const AGENDA = ["CIY content ဒီအပတ် အခြေအနေ","Gon ads · CPL နဲ့ CAC","M School enrollment target","Creative team · video & design queue","နောက်အပတ် ဦးစားပေး ၃ ခု"];
+
+// ---------- Three ----------
+const stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd9d4ca);
+const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 200);
+scene.add(new THREE.HemisphereLight(0xf4f6ff, 0x9a8f80, 0.85));
+const win = new THREE.DirectionalLight(0xfff1dc, 0.65); win.position.set(-10, 9, 4); scene.add(win);
+const pend = new THREE.PointLight(0xfff4e0, 0.5, 14); pend.position.set(-0.5, 2.6, -1); scene.add(pend);
+
+let portrait = false;
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false);
+  camera.aspect = w / h; portrait = w / h < 0.9; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize); resize();
+const VIEWS = ["Overview","Follow","Photo angle","Top","First person"];
+let view = 0;
+const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), curLook = new THREE.Vector3(4,0,2.2);
+function setView(i){ view = (i + VIEWS.length) % VIEWS.length; document.getElementById("viewName").textContent = VIEWS[view];
+  if (me) me.m.g.visible = view !== 4; if (me) me.tag.style.visibility = view === 4 ? "hidden" : ""; }
+function updateCamera(dt, snap){
+  const px = me ? me.x : 0, pz = me ? me.z : 0;
+  let fov = 46;
+  if (view === 0){ fov = portrait ? 66 : 48; camPos.set(4, portrait ? 34 : 19, portrait ? 17 : 20); camLook.set(4, 0, portrait ? 3 : 2.2); }
+  else if (view === 1){ fov = portrait ? 60 : 50; camPos.set(px, 5.2, pz + 5.2); camLook.set(px, 0.9, pz - 0.6); }
+  else if (view === 2){ fov = portrait ? 80 : 66; camPos.set(0.4, 1.9, 6.3); camLook.set(-0.6, 0.9, -3.2); }
+  else if (view === 3){ fov = portrait ? 74 : 54; camPos.set(4, portrait ? 34 : 24, 3.01); camLook.set(4, 0, 3); }
+  else { fov = 72; const h = me ? me.ry : 0; camPos.set(px + Math.sin(h)*0.12, 1.5, pz + Math.cos(h)*0.12); camLook.set(px + Math.sin(h)*3, 1.25, pz + Math.cos(h)*3); }
+  if (camera.fov !== fov){ camera.fov = fov; camera.updateProjectionMatrix(); }
+  const k = snap || view === 4 ? 1 : 1 - Math.pow(0.0005, dt);
+  camera.position.lerp(camPos, k); curLook.lerp(camLook, k); camera.lookAt(curLook);
+}
+updateCamera(0, true);
+
+const mats = {};
+const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color:c }));
+const G = new THREE.BoxGeometry(1,1,1);
+function box(w,h,d,c,x,y,z,parent,m){ const o = new THREE.Mesh(G, m || mat(c)); o.scale.set(w,h,d); o.position.set(x,y,z); (parent||scene).add(o); return o; }
+function cyl(rt,rb,h,c,x,y,z,parent,seg){ const o = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||14), mat(c)); o.position.set(x,y,z); (parent||scene).add(o); return o; }
+
+// ---------- Room (from the photo) ----------
+const obstacles = [];
+const block = (x0,x1,z0,z1) => obstacles.push({ x0, x1, z0, z1 });
+const BOUND = { x0:-6.55, x1:14.6, z0:-5.6, z1:11.7 };
+
+function floorTex(){
+  const c = document.createElement("canvas"); c.width = 128; c.height = 128; const g = c.getContext("2d");
+  g.fillStyle = "#ddd6c9"; g.fillRect(0,0,128,128); g.strokeStyle = "#c8c0b2"; g.lineWidth = 2; g.strokeRect(1,1,126,126);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(22, 18); return t;
+}
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), new THREE.MeshLambertMaterial({ map:floorTex() }));
+floor.rotation.x = -Math.PI/2; floor.position.set(4, 0, 3); scene.add(floor);
+box(22.2, 3.2, 0.2, 0xc9cdcb, 4, 1.6, -6.1);           // back wall
+box(0.2, 3.2, 18.2, 0xc9cdcb, -7.1, 1.6, 3);           // left wall
+box(0.2, 3.2, 18.2, 0xc3c8c8, 15.1, 1.6, 3);            // right wall
+box(22.2, 0.18, 0.3, 0xe8e6df, 4, 3.12, -5.98);        // cornice
+box(1.7, 0.46, 0.32, 0xe9e1c8, 0, 2.55, -5.85);        // AC unit
+box(1.5, 0.05, 0.02, 0x9a937f, 0, 2.38, -5.68);
+box(0.45, 0.6, 0.01, 0xffffff, 1.1, 1.75, -5.99); box(0.45, 0.6, 0.01, 0xffffff, 1.65, 1.75, -5.99); // papers on wall
+const glass = new THREE.MeshLambertMaterial({ color:0x9fc3d6, transparent:true, opacity:.55 });
+box(1.3, 2.4, 0.06, 0, 5.6, 1.2, -5.95, null, glass); box(0.08, 2.5, 0.1, 0x30343a, 4.92, 1.25, -5.93); // glass door
+// track lights + pendant
+box(10, 0.04, 0.04, 0xe5e5e5, 0, 3.05, -2);
+[-2.8, 1.6].forEach(x => { box(0.22, 0.22, 0.22, 0x1e1f24, x, 2.9, -2); });
+cyl(0.25, 0.25, 0.04, 0xcfcfcf, -0.5, 3.0, -1);
+[[-0.62,-0.9],[-0.38,-1.1],[-0.5,-0.85],[-0.42,-1.0]].forEach((p,i) => {
+  cyl(0.008, 0.008, 0.5 + i*0.12, 0x999999, p[0], 2.75 - i*0.06, p[1]);
+  box(0.09, 0.12, 0.09, 0, p[0], 2.48 - i*0.12, p[1], null, new THREE.MeshBasicMaterial({ color:0xfff6dc }));
+});
+
+// curtains: folds along left wall, divider and lounge back
+function curtain(x0, z0, x1, z1, h, y0){
+  const len = Math.hypot(x1-x0, z1-z0), n = Math.max(3, Math.round(len / 0.32));
+  for (let i = 0; i < n; i++){
+    const t = (i + 0.5) / n, x = x0 + (x1-x0)*t, z = z0 + (z1-z0)*t;
+    const c = i % 2 ? 0xd2c1a4 : 0xc4b190;
+    const along = Math.abs(x1-x0) > Math.abs(z1-z0);
+    box(along ? len/n + 0.02 : 0.12, h, along ? 0.12 : len/n + 0.02, c, x + (i%2 ? 0.04 : 0), y0 + h/2, z + (i%2 ? 0.04 : 0));
+  }
+  box(Math.abs(x1-x0) + 0.1 || 0.04, 0.04, Math.abs(z1-z0) + 0.1 || 0.04, 0xe39a2c, (x0+x1)/2, y0 + h + 0.03, (z0+z1)/2); // orange rail
+}
+curtain(-6.9, -5.8, -6.9, 11.8, 2.85, 0.02);
+curtain(3.0, -5.9, 3.0, -1.6, 2.85, 0.02); block(2.85, 3.15, -6, -1.6);
+curtain(3.05, 2.6, 3.05, 4.6, 2.85, 0.02); block(2.9, 3.2, 2.6, 4.6);
+
+// whiteboard on easel (facing +x)
+function boardTex(){
+  const c = document.createElement("canvas"); c.width = 384; c.height = 256; const g = c.getContext("2d");
+  g.fillStyle = "#fbfbf8"; g.fillRect(0,0,384,256);
+  g.strokeStyle = "#2b59c3"; g.lineWidth = 3; g.font = "700 22px Padauk, sans-serif"; g.fillStyle = "#2b59c3";
+  g.fillText("CSMC Weekly", 18, 36); g.strokeRect(12, 12, 150, 34);
+  g.font = "18px Padauk, sans-serif"; ["① CIY content","② Gon ads · CPL","③ M School target","④ Video queue"].forEach((s,i) => g.fillText(s, 20, 76 + i*30));
+  g.strokeStyle = "#1e1f24"; g.lineWidth = 2; g.beginPath(); g.moveTo(220,60); g.lineTo(300,60); g.lineTo(330,110); g.lineTo(260,160); g.lineTo(220,110); g.closePath(); g.stroke();
+  g.fillStyle = "#d6453d"; g.font = "700 18px 'IBM Plex Mono', monospace"; g.fillText("KPI ✓", 240, 205);
+  return new THREE.CanvasTexture(c);
+}
+const wb = new THREE.Group(); wb.position.set(-5.45, 0, -2.6); wb.rotation.y = Math.PI/2; scene.add(wb);
+box(2.2, 1.45, 0.06, 0xb9b9b9, 0, 1.7, 0, wb);
+const face = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 1.33), new THREE.MeshLambertMaterial({ map:boardTex() })); face.position.set(0, 1.7, 0.035); wb.add(face);
+[-0.95, 0.95].forEach(x => box(0.05, 1.6, 0.05, 0xd8d8d8, x, 0.8, 0.15, wb));
+box(2, 0.05, 0.12, 0xd8d8d8, 0, 0.95, 0.12, wb);
+block(-5.75, -5.15, -3.8, -1.4);
+
+// long white tables
+function table(cx, cz, w, d, top, leg, h){
+  box(w, 0.06, d, top, cx, h, cz);
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(s => box(0.06, h, 0.06, leg, cx + s[0]*(w/2-0.1), h/2, cz + s[1]*(d/2-0.1)));
+  block(cx - w/2, cx + w/2, cz - d/2, cz + d/2);
+}
+table(-0.5, -2.5, 2.9, 5.0, 0xf3f3ef, 0xd0d0cc, 0.76);
+box(0.05, 0.01, 5, 0xbdbdb6, -0.5, 0.795, -2.5);
+// front dark desk (Si Thu's)
+table(-0.5, 2.5, 5.2, 2.1, 0x3a2420, 0x2a1916, 0.76);
+
+// clutter: bottles, mugs, cap, sunglasses
+[[-1.2,-4.6],[0.3,-3.2],[-0.9,-0.6]].forEach(p => { cyl(0.05,0.05,0.28,0xcfe8f5,p[0],0.93,p[1]); cyl(0.03,0.03,0.03,0x2b59c3,p[0],1.08,p[1]); });
+[[-1.4,-2.0],[0.6,-0.4],[-0.2,-1.7]].forEach(p => cyl(0.05,0.045,0.1,0xf2efe6,p[0],0.84,p[1]));
+const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 8, 0, Math.PI*2, 0, Math.PI/2), mat(0x141416)); capTop.position.set(1.2, 0.79, 2.6); scene.add(capTop);
+box(0.18, 0.015, 0.14, 0x141416, 1.2, 0.795, 2.8);
+box(0.26, 0.02, 0.08, 0x1e1f24, 0.6, 0.8, 2.95);
+box(0.6, 0.02, 0.2, 0x26272c, -0.5, 0.8, 3.45); // keyboard
+box(0.28, 0.01, 0.3, 0x111214, 0.25, 0.795, 3.4); // mouse pad
+cyl(0.04, 0.05, 0.25, 0x30353a, -2.4, 0.92, 3.3); // tumbler
+
+// lounge: wooden armchairs + low table
+function armchair(x, z, ry){
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  box(0.9, 0.12, 0.85, 0x6b3f22, 0, 0.42, 0, g); box(0.8, 0.12, 0.75, 0xf1ece0, 0, 0.52, 0, g);
+  box(0.9, 0.6, 0.1, 0x6b3f22, 0, 0.75, -0.42, g); box(0.78, 0.5, 0.08, 0xf1ece0, 0, 0.8, -0.35, g);
+  [-0.42, 0.42].forEach(sx => box(0.08, 0.3, 0.85, 0x6b3f22, sx, 0.62, 0, g));
+  [[-0.4,-0.38],[0.4,-0.38],[-0.4,0.38],[0.4,0.38]].forEach(p => box(0.06,0.4,0.06,0x5a3420,p[0],0.2,p[1],g));
+}
+armchair(5.0, 0.9, -Math.PI/2); block(4.5, 5.5, 0.45, 1.35);
+armchair(5.0, -0.8, -Math.PI/2); block(4.5, 5.5, -1.25, -0.35);
+armchair(6.1, 3.0, Math.PI); block(5.65, 6.55, 2.55, 3.45);
+box(0.7, 0.04, 1.2, 0x7a4a2a, 4.1, 0.45, 0.05); block(3.75, 4.45, -0.55, 0.65);
+[[3.8,-0.5],[4.4,-0.5],[3.8,0.6],[4.4,0.6]].forEach(p => box(0.05,0.45,0.05,0x5a3420,p[0],0.22,p[1]));
+
+// ---------- expanded open space (right + front) ----------
+function pillar(x, z){ box(0.7, 3.1, 0.7, 0xe6e3dc, x, 1.55, z); block(x-0.35, x+0.35, z-0.35, z+0.35); }
+[[7.5,3.5],[11,3.5],[7.5,8.5],[11,8.5],[2,8.5]].forEach(p => pillar(p[0], p[1]));
+function plant(x, z){ cyl(0.3, 0.22, 0.5, 0x8a5a3a, x, 0.25, z); const l = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), mat(0x3f7d45)); l.position.set(x, 0.95, z); scene.add(l); block(x-0.35, x+0.35, z-0.35, z+0.35); }
+[[-6.2,11.2],[14.2,11.2],[14.2,-5.2],[4.6,11.2],[-6.2,6.2]].forEach(p => plant(p[0], p[1]));
+box(1.0, 0.9, 5, 0x6d4a35, 14.05, 0.45, -2.6); box(1.05, 0.05, 5.05, 0xe9e5dc, 14.05, 0.92, -2.6); block(13.55, 14.6, -5.1, -0.1);
+cyl(0.18, 0.18, 0.4, 0x8fc6e6, 14.0, 1.15, -4.4); box(0.4, 0.3, 0.4, 0xeeeeee, 14.0, 1.1, -1.0);
+box(0.8, 1.8, 0.8, 0xdcdcdc, 14.15, 0.9, 0.6); block(13.75, 14.6, 0.2, 1.0);
+box(1.4, 0.75, 0.7, 0x3a3d44, 9.5, 0.37, -5.4); box(0.6, 0.35, 0.5, 0xf0f0f0, 9.5, 0.92, -5.4); block(8.8, 10.2, -5.75, -5.05);
+cyl(0.9, 0.9, 0.06, 0xf3f3ef, 10.5, 0.75, -1.2); cyl(0.08, 0.08, 0.72, 0x8a8a8a, 10.5, 0.36, -1.2); block(9.7, 11.3, -2.0, -0.4);
+[[9.2,-1.2],[11.8,-1.2],[10.5,0.1]].forEach(p => cyl(0.25, 0.25, 0.45, 0x2b59c3, p[0], 0.22, p[1]));
+box(3.2, 0.45, 1.0, 0x5b6b78, 11.5, 0.3, 11.0); box(3.2, 0.7, 0.25, 0x4c5a66, 11.5, 0.7, 11.45); block(9.9, 13.1, 10.5, 11.6);
+const rug = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.6), mat(0xc7a46b)); rug.rotation.x = -Math.PI/2; rug.position.set(11.5, 0.01, 9.0); scene.add(rug);
+box(1.2, 0.4, 0.6, 0x7a4a2a, 11.5, 0.2, 9.2); block(10.9, 12.1, 8.9, 9.5);
+box(0.45, 2.0, 3.0, 0x6b4a35, -6.55, 1.0, 8.5); block(-6.8, -6.3, 7.0, 10.0);
+[[0x2b59c3,7.5],[0xd6453d,8.1],[0xe0a128,8.7],[0x2f9a5b,9.3]].forEach(b => box(0.3, 0.35, 0.4, b[0], -6.45, 1.35, b[1]));
+
+// chairs + laptops for each seat
+function chair(x, z, ry){
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  box(0.48, 0.06, 0.46, 0x1e1f24, 0, 0.46, 0, g); box(0.46, 0.5, 0.05, 0x1e1f24, 0, 0.74, -0.24, g);
+  [[-0.2,-0.2],[0.2,-0.2],[-0.2,0.2],[0.2,0.2]].forEach(p => box(0.03,0.46,0.03,0x8a8a8a,p[0],0.23,p[1],g));
+}
+function makeLaptop(){
+  const g = new THREE.Group();
+  box(0.36, 0.02, 0.25, 0x1c1d21, 0, 0.01, 0, g);
+  const lid = new THREE.Group(); lid.position.set(0, 0.02, -0.12); lid.rotation.x = -0.32; g.add(lid);
+  box(0.36, 0.24, 0.012, 0x1c1d21, 0, 0.12, 0, lid);
+  box(0.32, 0.2, 0.004, 0, 0, 0.12, 0.008, lid, new THREE.MeshBasicMaterial({ color:0xf3e9de }));
+  scene.add(g); return g;
+}
+
+// ---------- Characters ----------
+function makePerson(p){
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  const legL = box(0.14, 0.5, 0.16, 0x2a2c33, -0.09, 0.25, 0, body), legR = box(0.14, 0.5, 0.16, 0x2a2c33, 0.09, 0.25, 0, body);
+  cyl(0.2, 0.24, 0.62, p.shirt, 0, 0.82, 0, body);
+  const skin = 0xc8946a;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 12), mat(skin)); head.position.y = 1.33; body.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 10, 0, Math.PI*2, 0, Math.PI*0.55), mat(p.hair)); hair.position.y = 1.36; body.add(hair);
+  if (p.long) box(0.34, 0.36, 0.08, p.hair, 0, 1.2, -0.14, body);
+  if (p.cap){ const c = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10, 0, Math.PI*2, 0, Math.PI*0.5), mat(0x141416)); c.position.y = 1.4; body.add(c); box(0.24, 0.02, 0.18, 0x141416, 0, 1.42, 0.2, body); }
+  box(0.06, 0.06, 0.03, 0x1e1f24, -0.07, 1.36, 0.17, body); box(0.06, 0.06, 0.03, 0x1e1f24, 0.07, 1.36, 0.17, body);
+  const armL = new THREE.Group(); armL.position.set(-0.27, 1.05, 0); body.add(armL); box(0.09, 0.48, 0.1, p.shirt, 0, -0.22, 0, armL);
+  const armR = new THREE.Group(); armR.position.set(0.27, 1.05, 0); body.add(armR); box(0.09, 0.48, 0.1, p.shirt, 0, -0.22, 0, armR);
+  scene.add(g);
+  return { g, body, legL, legR, armL, armR };
+}
+
+const tagsEl = $("tags");
+const ents = [];
+PEOPLE.forEach(p => {
+  const m = makePerson(p);
+  const e = Object.assign({ p, m, x:p.seat[0], z:p.seat[1], ry:p.seat[2], mode:"sit", bonks:0, prog:20 + Math.random()*50,
+    bubble:"", bubT:0, stun:0, target:null, after:null, walkT:0, sayT:3 + Math.random()*8 }, {});
+  if (!p.lounge) chair(p.seat[0], p.seat[1], p.seat[2]);
+  e.laptop = makeLaptop();
+  const fx = Math.sin(p.seat[2]), fz = Math.cos(p.seat[2]);
+  e.lapHome = p.lounge ? { x:p.seat[0] + fx*0.35, y:0.72, z:p.seat[1] + fz*0.35, ry:p.seat[2] }
+                       : { x:p.seat[0] + fx*0.85, y:0.79, z:p.seat[1] + fz*0.85, ry:p.seat[2] };
+  placeLaptopHome(e);
+  const t = document.createElement("div"); t.className = "tag"; t.innerHTML = '<span class="bub"></span><span class="nm"></span>';
+  t.querySelector(".nm").textContent = p.name; tagsEl.appendChild(t); e.tag = t; e.bubEl = t.querySelector(".bub");
+  ents.push(e);
+});
+function placeLaptopHome(e){ scene.add(e.laptop); e.laptop.position.set(e.lapHome.x, e.lapHome.y, e.lapHome.z); e.laptop.rotation.set(0, e.lapHome.ry, 0); }
+
+
+const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 10), mat(0xfbfaf5));
+
+// ---------- State ----------
+const S = { started:false, prod:70, mode:"free", chase:null, chaseT:0, meetIdx:0, wins:0, losses:0, bonksTotal:0, swing:0 };
+
+// ---------- Movement ----------
+const R = 0.28;
+function blocked(x, z){
+  if (x < BOUND.x0 + R || x > BOUND.x1 - R || z < BOUND.z0 + R || z > BOUND.z1 - R) return true;
+  for (const o of obstacles) if (x > o.x0 - R && x < o.x1 + R && z > o.z0 - R && z < o.z1 + R) return true;
+  return false;
+}
+function move(e, dx, dz){
+  let moved = false;
+  if (!blocked(e.x + dx, e.z)) { e.x += dx; moved = true; }
+  if (!blocked(e.x, e.z + dz)) { e.z += dz; moved = true; }
+  return moved;
+}
+function setSay(e, text, t){ e.bubble = text; e.bubT = t || 2.5; }
+
+// ---------- Input ----------
+const keys = {};
+const joy = { x:0, z:0 };
+window.addEventListener("keydown", ev => {
+  const k = ev.code; keys[k] = true;
+  if (!S.started || !$("lookPanel").hidden || !$("meetPanel").hidden || !$("endPanel").hidden) return;
+  if (k === "KeyV") setView(view + 1);
+  if (k === "KeyE") doLook(); if (k === "KeyF") doBonk(); if (k === "KeyG") doGrab(); if (k === "KeyQ") doMeeting();
+  if (k.startsWith("Arrow") || k === "Space") ev.preventDefault();
+});
+window.addEventListener("keyup", ev => { keys[ev.code] = false; });
+$("viewBtn").addEventListener("click", () => setView(view + 1));
+$("aLook").addEventListener("click", () => doLook());
+$("aHit").addEventListener("click", () => doBonk());
+$("aGrab").addEventListener("click", () => doGrab());
+$("aMeet").addEventListener("click", () => doMeeting());
+(function(){
+  const pad = $("joy"), knob = $("knob"); let id = null, ox = 0, oy = 0;
+  pad.addEventListener("pointerdown", ev => { id = ev.pointerId; const r = pad.getBoundingClientRect(); ox = r.left + r.width/2; oy = r.top + r.height/2; pad.setPointerCapture(id); upd(ev); });
+  pad.addEventListener("pointermove", ev => { if (ev.pointerId === id) upd(ev); });
+  const end = ev => { if (ev.pointerId !== id) return; id = null; joy.x = joy.z = 0; knob.style.transform = ""; };
+  pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
+  function upd(ev){ let dx = ev.clientX - ox, dy = ev.clientY - oy; const l = Math.hypot(dx, dy), mx = 44;
+    if (l > mx){ dx *= mx/l; dy *= mx/l; } knob.style.transform = "translate(" + dx + "px," + dy + "px)"; joy.x = dx/mx; joy.z = dy/mx; }
+})();
+
+// ---------- Actions ----------
+function nearest(maxD){
+  let best = null, bd = maxD;
+  ents.forEach(e => { if (e === me || e.mode === "chase") return; const d = Math.hypot(e.x - me.x, e.z - me.z); if (d < bd){ bd = d; best = e; } });
+  return best;
+}
+function doLook(){
+  if (S.mode !== "free") return; const e = nearest(1.9); if (!e) return flash("လူတစ်ယောက်ယောက်နား သွားပါ");
+  $("lkName").textContent = e.p.name; $("lkRole").textContent = e.p.role.toUpperCase(); $("lkApp").textContent = e.p.app; $("lkTask").textContent = e.p.task;
+  $("lkFill").style.width = Math.round(e.prog) + "%"; $("lkPct").textContent = "progress " + Math.round(e.prog) + "% · ခေါက်ခံရ " + e.bonks + " ကြိမ်";
+  $("lkSay").textContent = e.p.name + ": “" + e.p.says[(Math.random()*e.p.says.length)|0] + "”";
+  $("lookPanel").hidden = false; $("lkClose").focus();
+}
+$("lkClose").addEventListener("click", () => { $("lookPanel").hidden = true; });
+
+function doBonk(){
+  if (S.mode !== "free") return;
+  S.swing = 0.3;
+  const e = nearest(1.6); if (!e) return;
+  e.bonks++; S.bonksTotal++; e.stun = 0.7; e.prog = Math.max(0, e.prog - 4);
+  S.prod = Math.max(0, S.prod - 3);
+  const line = e.bonks >= 3 && Math.random() < .6 ? BONK_LINES[5 + ((Math.random()*2)|0)] : BONK_LINES[(Math.random()*5)|0];
+  setSay(e, "💥 " + line, 2.2);
+}
+
+function doGrab(){
+  if (S.mode !== "free") return;
+  const e = nearest(1.7); if (!e) return flash("Laptop လုဖို့ လူတစ်ယောက်နား ကပ်ပါ");
+  if (e.mode !== "sit") return flash(e.p.name + " ထိုင်ပြီး အလုပ်လုပ်နေမှ လုလို့ရမယ်");
+  S.mode = "chase"; S.chase = e; S.chaseT = 22;
+  me.m.armL.add(e.laptop); e.laptop.position.set(0.27, -0.42, 0.25); e.laptop.rotation.set(-1.2, 0, 0);
+  me.m.armL.rotation.x = -1.2; me.m.armR.rotation.x = -1.2;
+  standUp(e); e.mode = "chase"; e.freeze = 2; e.dash = 4.5; e.dashOn = 0; e.stuck = 0; e.nudge = 0;
+  setSay(e, "ဟင်?! ငါ့ laptop...", 2);
+  S.prod = Math.max(0, S.prod - 8);
+  ents.forEach(o => { if (o !== e && o !== me && o.mode === "sit" && Math.random() < .5) setSay(o, ["ပြေး ပြေး!","ဟားဟား","ဖမ်း ဖမ်း!"][(Math.random()*3)|0], 2); });
+}
+function endChase(won){
+  const e = S.chase; S.mode = "ended"; e.mode = "idle";
+  placeLaptopHome(e); me.m.armL.rotation.x = 0; me.m.armR.rotation.x = 0;
+  if (won){ S.wins++; } else { S.losses++; }
+  $("endIcon").textContent = won ? "🏃💨" : "🫵";
+  $("endTitle").textContent = won ? "လွတ်သွားပြီ! နိုင်တယ်" : "မိသွားပြီ! ရှုံးတယ်";
+  $("endText").textContent = won ? e.p.name + " က အချိန်ပြည့် လိုက်ပေမဲ့ မမိဘူး။ Laptop ကို ပြန်ပေးလိုက်ပါပြီ။"
+                                 : e.p.name + " က laptop ကို ပြန်ယူသွားပြီ။ နောက်တစ်ခါ ပိုမြန်မြန် ပြေးပါ။";
+  $("endPanel").hidden = false; $("endBtn").focus();
+  setSay(e, won ? "နောက်တစ်ခါတော့ မိမယ်" : "ဟား မိပြီ!", 3);
+}
+$("endBtn").addEventListener("click", () => {
+  $("endPanel").hidden = true; const e = S.chase; S.chase = null; S.mode = "free";
+  walkTo(e, e.p.seat[0], e.p.seat[1], () => sitDown(e));
+});
+
+// meeting
+function meetingSpot(i, n){ const a = -1.05 + 2.1 * (n === 1 ? 0.5 : i/(n-1)); return { x:-5.2 + 2.7*Math.cos(a), z:-2.6 + 2.7*Math.sin(a) }; }
+function doMeeting(){
+  if (S.mode !== "free") return;
+  S.mode = "meeting-gather"; S.meetIdx = 0;
+  const others = ents.filter(e => e !== me);
+  others.forEach((e, i) => { const s = meetingSpot(i, others.length); setSay(e, "လာပြီ!", 1.5); standUp(e); walkTo(e, s.x, s.z, () => { e.mode = "meet"; e.ry = Math.atan2(-5.2 - e.x, -2.6 - e.z); }); });
+  me.target = { x:-4.55, z:-2.6 }; me.autoWalk = true;
+  flash("Meeting ခေါ်လိုက်ပြီ · whiteboard ဆီ စုနေကြတယ်");
+}
+function openAgenda(){
+  S.mode = "meeting";
+  const ol = $("agenda"); ol.innerHTML = "";
+  AGENDA.forEach((a, i) => { const li = document.createElement("li"); li.textContent = a; if (i === S.meetIdx) li.className = "now"; ol.appendChild(li); });
+  $("meetPanel").hidden = false; $("meetNext").focus();
+  speakAgenda();
+}
+function speakAgenda(){
+  const others = ents.filter(e => e !== me);
+  const lines = [["ဒီအပတ် post ၅ ခု တင်ပြီးပြီ","reach ၁၂% တက်တယ်"],["CPL နည်းနည်း ကျလာပြီ","creative အသစ် စမ်းမယ်"],["target ရဲ့ ၇၀% ရောက်ပြီ","referral ထပ်တွန်းမယ်"],["video ၃ ပုဒ် queue ထဲမှာ","poster ၂ ခု review စောင့်"],["Ads, Content, Enrollment","ok ပါ!"]][S.meetIdx];
+  const a = others[(Math.random()*others.length)|0], b = others[(Math.random()*others.length)|0];
+  setSay(a, lines[0], 4); if (b !== a) setTimeout(() => setSay(b, lines[1], 3.5), 900);
+  [...$("agenda").children].forEach((li, i) => li.className = i === S.meetIdx ? "now" : "");
+}
+$("meetNext").addEventListener("click", () => { S.meetIdx = Math.min(AGENDA.length - 1, S.meetIdx + 1); speakAgenda(); });
+$("meetEnd").addEventListener("click", () => {
+  $("meetPanel").hidden = true; S.mode = "free"; S.prod = Math.min(100, S.prod + 10);
+  flash("Meeting ပြီးပြီ · productivity +10%");
+  ents.forEach(e => { if (e === me) return; e.prog = Math.min(100, e.prog + 8); walkTo(e, e.p.seat[0], e.p.seat[1], () => sitDown(e)); });
+});
+
+function standUp(e){
+  if (e.mode !== "sit" && e.mode !== "player") return;
+  const sx = e.p.seat[0], sz = e.p.seat[1], fx = Math.sin(e.p.seat[2]), fz = Math.cos(e.p.seat[2]);
+  const tries = [[-fx*0.5,-fz*0.5],[fz*0.6,-fx*0.6],[-fz*0.6,fx*0.6],[-fx*0.9,-fz*0.9],[fz*1.0,-fx*1.0],[-fz*1.0,fx*1.0],[-0.65,0.75],[-0.65,-0.75]];
+  for (const o of tries){ if (!blocked(sx + o[0], sz + o[1])){ e.x = sx + o[0]; e.z = sz + o[1]; return; } }
+}
+function walkTo(e, x, z, after){ standUp(e); e.mode = "walk"; e.target = { x, z }; e.after = after; }
+function sitDown(e){ e.mode = "sit"; e.x = e.p.seat[0]; e.z = e.p.seat[1]; e.ry = e.p.seat[2]; }
+
+let flashT = 0;
+function flash(msg){ $("status").textContent = msg; flashT = 2.5; }
+
+// ---------- Loop ----------
+const clock = new THREE.Clock();
+const v3 = new THREE.Vector3();
+let t = 0;
+function update(dt){
+  t += dt;
+  // player
+  let ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + joy.x;
+  let iz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + joy.z;
+  const busy = !$("lookPanel").hidden || !$("meetPanel").hidden || !$("endPanel").hidden || S.mode === "ended";
+  if (busy){ ix = iz = 0; }
+  if (me.autoWalk && me.target){
+    const dx = me.target.x - me.x, dz = me.target.z - me.z, d = Math.hypot(dx, dz);
+    if (d < 0.15){ me.autoWalk = false; me.target = null; me.ry = -Math.PI/2; } else { ix = dx/d; iz = dz/d; me.x += ix * 3.2 * dt; me.z += iz * 3.2 * dt; ix = iz = 0; me.ry = Math.atan2(dx, dz); me.walkT += dt * 10; }
+  }
+  if (view === 4 && !me.autoWalk){
+    me.ry -= ix * 2.6 * dt; const f = -iz;
+    if (Math.abs(f) > 0.08){ const sp = (S.mode === "chase" ? 5.4 : 3.6) * f; move(me, Math.sin(me.ry) * sp * dt, Math.cos(me.ry) * sp * dt); me.walkT += dt * 12; }
+    ix = iz = 0;
+  }
+  const il = Math.hypot(ix, iz);
+  if (il > 0.08){
+    const sp = (S.mode === "chase" ? 5.4 : 3.6) * Math.min(1, il);
+    move(me, ix/il * sp * dt, iz/il * sp * dt); me.ry = Math.atan2(ix, iz); me.walkT += dt * 12;
+  }
+  me.mode = "player";
+
+  // NPCs
+  ents.forEach(e => {
+    if (e === me) return;
+    if (e.mode === "walk" && e.target){
+      const dx = e.target.x - e.x, dz = e.target.z - e.z, d = Math.hypot(dx, dz);
+      if (d < 0.1){ e.x = e.target.x; e.z = e.target.z; e.target = null; const a = e.after; e.after = null; if (a) a(); }
+      else { const sp = 2.6; e.x += dx/d * Math.min(d, sp*dt); e.z += dz/d * Math.min(d, sp*dt); e.ry = Math.atan2(dx, dz); e.walkT += dt * 10; }
+    } else if (e.mode === "chase" && e.freeze > 0){
+      e.freeze -= dt; e.ry = Math.atan2(me.x - e.x, me.z - e.z);
+      if (e.freeze <= 0) setSay(e, "ဟေ့! ငါ့ laptop ပြန်ပေး!!", 2.5);
+    } else if (e.mode === "chase"){
+      e.dash -= dt; if (e.dash <= 0){ e.dashOn = 0.9; e.dash = 3 + Math.random()*1.5; setSay(e, "ရပ်!!", 0.9); }
+      e.dashOn = Math.max(0, e.dashOn - dt);
+      const sp = e.dashOn > 0 ? 7.6 : 4.7;
+      let dx = me.x - e.x, dz = me.z - e.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
+      if (e.nudge > 0){ e.nudge -= dt; const s = e.nudgeSide; const nx = -dz * s, nz = dx * s; dx = nx; dz = nz; }
+      const bx = e.x, bz = e.z; move(e, dx * sp * dt, dz * sp * dt);
+      if (Math.hypot(e.x - bx, e.z - bz) < sp * dt * 0.3){ e.stuck += dt; if (e.stuck > 0.25){ e.nudge = 0.45; e.nudgeSide = Math.random() < .5 ? 1 : -1; e.stuck = 0; } } else e.stuck = 0;
+      e.ry = Math.atan2(me.x - e.x, me.z - e.z); e.walkT += dt * 14;
+      if (Math.hypot(me.x - e.x, me.z - e.z) < 0.7 && S.mode === "chase") endChase(false);
+    } else if (e.mode === "sit"){
+      e.prog = Math.min(100, e.prog + dt * (e.p.lounge ? 0.15 : 0.9));
+      e.sayT -= dt; if (e.sayT <= 0){ e.sayT = 8 + Math.random()*12; if (Math.random() < .5) setSay(e, e.p.says[(Math.random()*e.p.says.length)|0], 2.6); }
+    }
+    if (e.bubT > 0){ e.bubT -= dt; if (e.bubT <= 0) e.bubble = ""; }
+    e.stun = Math.max(0, e.stun - dt);
+  });
+
+  if (S.mode === "meeting-gather"){
+    if (ents.every(e => e === me || e.mode === "meet") && !me.autoWalk) openAgenda();
+  }
+  if (S.mode === "chase"){
+    S.chaseT -= dt; $("timer").textContent = "⏱ " + Math.max(0, S.chaseT).toFixed(1) + "s";
+    $("status").textContent = S.chase.freeze > 0 ? "ပြေး! " + S.chase.p.name + " မသိသေးဘူး · " + S.chase.freeze.toFixed(1) + "s" : S.chase.p.name + " ရဲ့ laptop ကို ယူပြေးနေတယ်! မမိစေနဲ့";
+    if (S.chaseT <= 0) endChase(true);
+  } else { $("timer").textContent = ""; }
+
+  // productivity drift
+  const working = ents.filter(e => e !== me && e.mode === "sit" && !e.p.lounge).length;
+  if (S.mode === "free") S.prod = Math.min(100, S.prod + dt * 0.08 * working - dt * 0.1);
+  $("prod").style.width = Math.round(S.prod) + "%"; $("prodNum").textContent = Math.round(S.prod) + "%";
+  $("prod").style.background = S.prod > 60 ? "var(--green)" : S.prod > 30 ? "#e0a128" : "var(--red)";
+  $("score").textContent = "ပြေးနိုင် " + S.wins + " · မိ " + S.losses + " · ခေါက်ပြီး " + S.bonksTotal;
+  if (flashT > 0){ flashT -= dt; if (flashT <= 0 && S.mode === "free") $("status").textContent = "ရုံးခန်းထဲ လမ်းလျှောက်ကြည့်ပါ"; }
+
+  // hint
+  const n = S.mode === "free" ? nearest(1.8) : null;
+  ents.forEach(e => e.tag.classList.toggle("near", e === n));
+  const hint = $("hint");
+  if (n && $("lookPanel").hidden){ hint.hidden = false; hint.innerHTML = "<b></b> <span class='keys'><kbd>E</kbd>ကြည့် <kbd>F</kbd>ခေါက် <kbd>G</kbd>laptop လု</span>"; hint.querySelector("b").textContent = n.p.name; }
+  else if (S.mode === "free"){ hint.hidden = false; hint.innerHTML = "<span class='keys'><kbd>Q</kbd> Meeting ခေါ်ရန် · </span>တစ်ယောက်ယောက်နား သွားပါ"; }
+  else hint.hidden = true;
+
+  // pose everything
+  S.swing = Math.max(0, S.swing - dt);
+  ents.forEach(e => {
+    const m = e.m;
+    m.g.position.set(e.x, 0, e.z);
+    const seated = e.mode === "sit";
+    if (seated){
+      m.g.rotation.y = e.p.seat[2];
+      m.body.position.y = e.p.lounge ? -0.12 : -0.05;
+      m.body.rotation.x = e.p.lounge ? -0.45 : 0;
+      m.legL.rotation.x = m.legR.rotation.x = -1.4; m.legL.position.set(-0.09, 0.47, 0.22); m.legR.position.set(0.09, 0.47, 0.22);
+      if (e !== me){ m.armL.rotation.x = m.armR.rotation.x = e.p.lounge ? -0.3 : -1.1 + Math.sin(t*14 + e.x)*0.06; }
+    } else {
+      m.g.rotation.y = e.ry;
+      m.body.rotation.x = 0;
+      m.legL.position.set(-0.09, 0.25, 0); m.legR.position.set(0.09, 0.25, 0);
+      const w = Math.sin(e.walkT); m.legL.rotation.x = w * 0.6; m.legR.rotation.x = -w * 0.6;
+      m.body.position.y = Math.abs(Math.cos(e.walkT)) * 0.05;
+      if (!(e === me && S.mode === "chase")){ m.armL.rotation.x = -w * 0.5; m.armR.rotation.x = w * 0.5; }
+    }
+    m.body.rotation.z = e.stun > 0 ? Math.sin(e.stun * 40) * 0.25 : 0;
+  });
+  if (S.mode !== "chase") me.m.armR.rotation.x = S.swing > 0 ? -2.6 + (0.3 - S.swing) * 9 : me.m.armR.rotation.x;
+
+  // tags
+  const w = stage.clientWidth, h = stage.clientHeight;
+  ents.forEach(e => {
+    v3.set(e.x, e.mode === "sit" ? 1.55 : 1.75, e.z).project(camera);
+    e.tag.style.display = v3.z > 1 || Math.abs(v3.x) > 1.2 ? "none" : "";
+    e.tag.style.left = ((v3.x + 1) / 2 * w) + "px"; e.tag.style.top = ((1 - v3.y) / 2 * h) + "px";
+    if (e.bubEl.textContent !== e.bubble) e.bubEl.textContent = e.bubble;
+  });
+}
+function loop(){ requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), 0.05); if (S.started) update(dt); else idle(dt); updateCamera(dt); renderer.render(scene, camera); }
+function idle(dt){
+  t += dt;
+  ents.forEach(e => { const m = e.m; m.g.position.set(e.x, 0, e.z); m.g.rotation.y = e.p.seat[2]; m.body.position.y = e.p.lounge ? -0.12 : -0.05; m.body.rotation.x = e.p.lounge ? -0.45 : 0;
+    m.legL.rotation.x = m.legR.rotation.x = -1.4; m.legL.position.set(-0.09, 0.47, 0.22); m.legR.position.set(0.09, 0.47, 0.22);
+    m.armL.rotation.x = m.armR.rotation.x = e.p.lounge ? -0.3 : -1.1 + Math.sin(t*14 + e.x)*0.06; });
+  const w = stage.clientWidth, h = stage.clientHeight;
+  ents.forEach(e => { v3.set(e.x, 1.55, e.z).project(camera); e.tag.style.left = ((v3.x + 1)/2*w) + "px"; e.tag.style.top = ((1 - v3.y)/2*h) + "px"; });
+}
+
+// ---------- Start ----------
+const sel = $("who");
+PEOPLE.forEach((p, i) => { const o = document.createElement("option"); o.value = i; o.textContent = p.name; sel.appendChild(o); });
+$("startBtn").addEventListener("click", () => {
+  me = ents[+sel.value];
+  me.mode = "player"; standUp(me); if (me.p.lounge){ me.x = 4.1; me.z = 1.6; } me.ry = me.p.seat[2] + Math.PI; me.walkT = 0;
+  if (blocked(me.x, me.z)){ me.x = 0; me.z = 4.8; }
+  me.tag.classList.add("me"); me.tag.querySelector(".nm").textContent = me.p.name + " (ကိုယ်)";
+  me.m.armR.add(roll); roll.position.set(0, -0.45, 0.12); roll.rotation.x = Math.PI/2;
+  $("intro").hidden = true; S.started = true; clock.getDelta(); setView(view);
+});
+loop();
+})();
+</script>
+
+</body>
+</html>
